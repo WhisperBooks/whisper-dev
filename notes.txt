@@ -1,0 +1,592 @@
+git submodule remove https://github.com/exilon/QuickLogger.git thirdparty/QuickLogger
+
+https://github.com/ggml-org/whisper.cpp/pull/3057
+
+git clone https://github.com/WhisperBooks/whisper.cpp.git -b v175-dynamic v175-dynamic 
+v175-flat
+
+For DLLs
+========================
+uses Windows;
+if  IsDebuggerPresent() then
+  Caption := Caption + ' in IDE';
+
+SetDllDirectory('C:\Program Files (x86)\Mozilla Firefox');
+NSSModule := LoadLibrary('nss3.dll');
+SetDllDirectory(nil);
+========================
+
+The changes to whisper.cpp look good to me, but the changes to ggml-backend.cpp/h need to be removed. ggml is a separate library and cannot be modified in this way. There are also good reasons why ggml_backend_sched requires a CPU backend, even when using a GPU the CPU backend must be available.
+
+Deps
+
+whisper
+    ggml
+        ggml-base
+    openvino
+        tbb12
+        
+#if defined(BINDINGS_FLAT)
+#include "ggml-backend.h"
+#include "../ggml/src/ggml-backend-impl.h"
+#endif
+
+#if defined(GGML_BACKEND_DL) and defined(BINDINGS_FLAT)
+    fprintf(stderr, "TGgmlBackend       : %d\n", sizeof(struct ggml_backend));
+    fprintf(stderr, "TGgmlBackendDevice : %d\n", sizeof(struct ggml_backend_device));
+    fprintf(stderr, "IGgmlBackendDevice : %d\n", sizeof(struct ggml_backend_device_i));
+    whisper_flat_backend_load_all();
+#endif
+
+TGgmlBackend       : 128
+TGgmlBackendDevice : 136
+IGgmlBackendDevice : 120
+
+git clone https://github.com/microsoft/vcpkg.git
+cd vcpkg; .\bootstrap-vcpkg.bat
+Set path + VCPKG_ROOT = "C:\path_to\vcpkg"
+reopen terminal
+vcpkg install pkgconf sdl2 openblas opencl openvino
+https://strawberryperl.com/ - -DGGML_HIP=1 -DCMAKE_PREFIX_PATH="C:\Program Files\AMD\ROCm\6.2" 
+
+set -DCMAKE_TOOLCHAIN_FILE=D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake
+
+cmake -B build-static -DCMAKE_TOOLCHAIN_FILE=D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake -DGGML_CUDA=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1
+cmake --build build-static -j --config Release
+cmake --build build-static -j
+
+cmake -B build -DCMAKE_TOOLCHAIN_FILE=D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake -DGGML_CUDA=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON
+cmake --build build -j --config Release
+cmake --build build -j
+
+ -DCMAKE_CUDA_ARCHITECTURES="50;52;53;60;61;62;70;72;75;80;86;87;89;90;100;101;120"
+
+Mac
+cmake -B build -DWHISPER_COREML=1 -DWHISPER_SDL2=ON -DBUILD_SHARED_LIBS=ON
+
+cmake -B build-dl -DCMAKE_TOOLCHAIN_FILE=D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake -DGGML_KOMPUTE=1 -DGGML_CUDA=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON
+C:\lib\kompute\build
+
+Ubu
+sudo apt-get install cmake nvidia-cuda-toolkit libvulkan-dev libsdl2-dev glslc build-essential git libgl1-mesa-dev ffmpeg libopenblas-openmp-dev libopenmpi-dev
+cmake -B build-dl -DGGML_CUDA=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DGGML_OPENMP=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON
+
+WinVINO
+cmake -B build-cuda -DCMAKE_TOOLCHAIN_FILE=D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake -DGGML_CUDA=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR=C:\lib\openvino\runtime\cmake
+
+
+Nano
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/sbsa/cuda-ubuntu1804.pin
+sudo mv cuda-ubuntu1804.pin /etc/apt/preferences.d/cuda-repository-pin-600
+wget https://developer.download.nvidia.com/compute/cuda/11.4.0/local_installers/cuda-repo-ubuntu1804-11-4-local_11.4.0-470.42.01-1_arm64.deb
+sudo dpkg -i cuda-repo-ubuntu1804-11-4-local_11.4.0-470.42.01-1_arm64.deb
+sudo apt-key add /var/cuda-repo-ubuntu1804-11-4-local/7fa2af80.pub
+sudo apt-get update
+sudo apt-get -y install cuda
+sudo update-alternatives --install /usr/local/cuda cuda /usr/local/cuda-11.4 114
+cmake -B build -DGGML_CUDA=1 -DBUILD_SHARED_LIBS=ON -DWHISPER_SDL2=ON -DCMAKE_CUDA_ARCHITECTURES=native -DCMAKE_PREFIX_PATH=/usr/local/cuda-11.4
+cmake --build build -j --config Release
+
+
+cmake -B build-flat -DCMAKE_TOOLCHAIN_FILE=D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake -DGGML_CUDA=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR=C:\lib\openvino\runtime\cmake -DWHISPER_BINDINGS_FLAT=1
+cmake --build build-flat -j --config Release
+cmake --build build-flat -j
+
+cmake -B build-shared -DCMAKE_TOOLCHAIN_FILE=D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake -DGGML_CUDA=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR=C:\lib\openvino\runtime\cmake -DWHISPER_BINDINGS_FLAT=1 -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON
+cmake --build build-shared -j --config Release
+cmake --build build-shared -j
+
+g4ad = amd v520  - $0.379/h
+G4dn = nvidia t4 - $0.526/h
+
+SYCL
+https://www.intel.com/content/www/us/en/developer/tools/oneapi/base-toolkit-download.html
+cmake -B build-sycl -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake" -DGGML_SYCL=1
+cmake --build build-sycl -j --config Release
+
+Test HIP
+cmake -B build-hip -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake" -DGGML_CUDA=1 -DGGML_HIP=1 -DCMAKE_PREFIX_PATH="c:\Program Files\AMD\ROCm\6.2\lib;c:\Program Files\AMD\ROCm\6.2\lib\cmake"
+
+
+cmake -B build-shared -DCMAKE_TOOLCHAIN_FILE=D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake -DGGML_CUDA=1 -DGGML_HIP=1 -DGGML_OPENCL=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR=C:\lib\openvino\runtime\cmake -DWHISPER_BINDINGS_FLAT=1 -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON; 
+cmake --build build-shared -j --config Release
+
+MacARM
+cmake -B build -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DWHISPER_COREML=ON -DGGML_METAL=ON -DGGML_METAL_USE_BF16=ON
+# -DWHISPER_OPENVINO=ON -DOpenVINO_DIR="~/build_libs/openvino/runtime/cmake"
+find . -type f -name '*.dylib'
+mkdir ../lib
+cp ./build/ggml/src/ggml-blas/libggml-blas.dylib ../lib
+cp ./build/ggml/src/libggml.dylib ../lib
+cp ./build/ggml/src/libggml-base.dylib ../lib
+cp ./build/ggml/src/ggml-metal/libggml-metal.dylib ../lib
+cp ./build/ggml/src/libggml-cpu.dylib ../lib
+cp ./build/src/libwhisper.dylib ../lib
+cp ./build/src/libwhisper.coreml.dylib ../lib
+
+Macx64
+cmake -B build -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DGGML_METAL=ON -DGGML_METAL_USE_BF16=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DWHISPER_BINDINGS_FLAT=ON
+# -DWHISPER_OPENVINO=ON -DOpenVINO_DIR="~/build_libs/openvino/runtime/cmake"
+find . -type f -name '*.dylib'
+mkdir ../lib
+cp ./build/ggml/src/ggml-blas/libggml-blas.dylib ../lib
+cp ./build/ggml/src/libggml.dylib ../lib
+cp ./build/ggml/src/libggml-base.dylib ../lib
+cp ./build/ggml/src/ggml-metal/libggml-metal.dylib ../lib
+cp ./build/ggml/src/libggml-cpu.dylib ../lib
+cp ./build/src/libwhisper.dylib ../lib
+cp ./build/src/libwhisper.coreml.dylib ../lib
+
+Ubu
+sudo apt-get install build-essential git cmake nvidia-cuda-toolkit libvulkan-dev libsdl2-dev glslc libopenblas-openmp-dev
+
+cmake -B build -DGGML_CUDA=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_RPC=1 -DGGML_BLAS=ON -DGGML_BACKEND_DL=ON -DGGML_BLAS_VENDOR="OpenBLAS" -DGGML_CPU_ALL_VARIANTS=ON -DWHISPER_BINDINGS_FLAT=ON
+cmake --build build -j --config Release
+
+mkdir lib
+mkdir lib/linux
+
+cp build/src/libwhisper.so lib/linux
+cp build/ggml/src/libggml-cpu.so lib/linux
+cp build/ggml/src/ggml-vulkan/libggml-vulkan.so lib/linux
+cp build/ggml/src/libggml-base.so lib/linux
+cp build/ggml/src/libggml.so lib/linux
+cp build/ggml/src/ggml-cuda/libggml-cuda.so lib/linux
+
+Pi5
+sudo apt-get install libsdl2-dev build-essential cmake git libgl1-mesa-dev ffmpeg libopenblas-openmp-dev
+//  glslc libvulkan-dev 
+gambas3-gb-opengl-glsl
+cmake -B build -DWHISPER_SDL2=ON -DGGML_RPC=1 -DGGML_BLAS=ON -DGGML_BLAS_VENDOR="OpenBLAS" -DWHISPER_BINDINGS_FLAT=ON -DGGML_BACKEND_DL=ON -DBUILD_SHARED_LIBS=ON -DGGML_CPU_AARCH64=ON -DGGML_NATIVE=OFF
+// -DGGML_VULKAN=1 
+
+// https://github.com/google/shaderc.git
+// cmake -B build -DSHADERC_SKIP_TESTS=ON
+grab cmake + setup (new version)
+sudo apt-get install spirv-tools glslang-dev glslang-tools
+
+cmake -B build-shared -DNDEBUG=ON -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake" -DGGML_CUDA=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake" -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON
+
+cmake --build build-shared -j --config Release
+cmake --build build-shared -j
+
+Win11
+cmake -B build-binding -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake" -DGGML_CUDA=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake" -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON > ..\binding.log 2>&1; cmake --build build-binding -j --config Release >> ..\binding.log 2>&1; cmake --build build-binding -j >> ..\binding.log 2>&1
+cmake -B build-shared -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake" -DGGML_CUDA=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake" -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON > ..\build.log 2>&1; cmake --build build-shared -j --config Release >> ..\build.log 2>&1; cmake --build build-shared -j >> ..\build.log 2>&1
+cmake -B build-flat -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake" -DGGML_CUDA=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake";cmake --build build-flat -j --config Release;cmake --build build-flat -j
+ -DCMAKE_CUDA_ARCHITECTURES="50;52;53;60;61;62;70;72;75;80;86;87;89;90;100;101;120"
+
+Win11 Ninja/LLVM
+cmake -B build-shared -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake" -DGGML_CUDA=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake" -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DCMAKE_BUILD_TYPE=Release 
+ -DCMAKE_CUDA_ARCHITECTURES="50;52;53;60;61;62;70;72;75;80;86;87;89;90;100;101;120"
+cmake --build build-shared
+
+bcc
+cmake -G Ninja -S . -B build-test -DGGML_CUDA=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake" -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DCMAKE_ASM_COMPILER=bcc64x -DCMAKE_C_COMPILER=bcc64x -DCMAKE_CXX_COMPILER=bcc64x -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_PROCESSOR=x86_64 -DCMAKE_CROSSCOMPILING=OFF -DCMAKE_BUILD_TYPE=Release
+-DWHISPER_SDL2=ON 
+-DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS 
+
+sdl2
+git clone https://github.com/libsdl-org/SDL -b SDL2 SDL2
+cmake  -G "Visual Studio 17 2022" -A x64 -B build -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="C:\build_lib\sdl2"
+cmake --build build -j --config Release
+cmake --install build --config Release
+cmake -B build -DWHISPER_SDL2=ON -DSDL2_DIR="C:\build_lib\sdl2\cmake" -DCMAKE_INSTALL_PREFIX="C:\build\whisper"
+
+sycl
+
+https://www.intel.com/content/www/us/en/developer/tools/oneapi/base-toolkit-download.html
+Install
+git clone https://github.com/WhisperBooks/whisper.cpp.git -b flat-fix
+cmake -S . -B build -G "NMake Makefiles" -DGGML_SYCL=ON -DCMAKE_BUILD_TYPE=Release
+
+function(ggml_add_backend backend)
+    string(TOUPPER "GGML_${backend}" backend_id)
+    # This fixes MSVC + OneAPI as compiler 
+    if(BINDINGS_FLAT AND MSVC AND DEFINED ENV{ONEAPI_ROOT} AND backend STREQUAL "SYCL")
+        set(CMAKE_CXX_COMPILER "icx")
+    endif()
+
+
+target_compile_options(ggml-sycl PRIVATE "-Wno-narrowing")
+
+# Lots of warnings with OneApi + icx - turn em off
+if(BINDINGS_FLAT AND CMAKE_CXX_COMPILER STREQUAL "icx")
+    target_compile_options(ggml-sycl PRIVATE "-Wno-unused-function")
+    target_compile_options(ggml-sycl PRIVATE "-Wno-ignored-attributes")
+    target_compile_options(ggml-sycl PRIVATE "-Wno-format")
+endif()
+
+cmake  -G "NMake Makefiles" -B build-shared -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake" -DGGML_SYCL=ON -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake" -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DGGML_CUDA=1 -DGGML_SYCL_TARGET="NVIDIA" -DDNNL_GPU_VENDOR="NVIDIA"
+ -DCMAKE_CUDA_ARCHITECTURES="50;52;53;60;61;62;70;72;75;80;86;87;89;90;100;101;120"
+
+cmake -G Ninja -B build-ninja2 -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake" -DGGML_SYCL=ON -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake" -DBINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DGGML_CUDA=1 -DGGML_SYCL_TARGET="NVIDIA" -DDNNL_GPU_VENDOR="NVIDIA"
+
+
+cmake -B build -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake" -DCMAKE_CUDA_ARCHITECTURES="50;75" -DGGML_CUDA=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake" -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON > ..\binding.log 2>&1; cmake --build build -j --config Release >> ..\binding.log 2>&1; cmake --build build -j >> ..\binding.log 2>&1
+cmake -B build-shared -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake" -DGGML_CUDA=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake" -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON > ..\build.log 2>&1; cmake --build build-shared -j --config Release >> ..\build.log 2>&1; cmake --build build-shared -j >> ..\build.log 2>&1
+cmake -B build-flat -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake" -DGGML_CUDA=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake";cmake --build build-flat -j --config Release;cmake --build build-flat -j
+
+cmake -B build-binding-120 -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake"  -DCMAKE_CUDA_ARCHITECTURES="120" -DGGML_CUDA=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake" -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON > ..\binding-120.log 2>&1; cmake --build build-binding-120 -j --config Release >> ..\binding-120.log 2>&1
+cmake -B build-binding-86 -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake"  -DCMAKE_CUDA_ARCHITECTURES="86" -DGGML_CUDA=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake" -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON > ..\binding-86.log 2>&1; cmake --build build-binding-86 -j --config Release >> ..\binding-86.log 2>&1
+cmake -B build-binding-75 -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake"  -DCMAKE_CUDA_ARCHITECTURES="75" -DGGML_CUDA=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake" -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON > ..\binding-75.log 2>&1; cmake --build build-binding-75 -j --config Release >> ..\binding-75.log 2>&1
+cmake -B build-binding-72 -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake"  -DCMAKE_CUDA_ARCHITECTURES="72" -DGGML_CUDA=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake" -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON > ..\binding-72.log 2>&1; cmake --build build-binding-72 -j --config Release >> ..\binding-72.log 2>&1
+cmake -B build-binding-70 -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake"  -DCMAKE_CUDA_ARCHITECTURES="70" -DGGML_CUDA=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake" -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON > ..\binding-70.log 2>&1; cmake --build build-binding-70 -j --config Release >> ..\binding-70.log 2>&1
+cmake -B build-binding-61 -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake"  -DCMAKE_CUDA_ARCHITECTURES="61" -DGGML_CUDA=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake" -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON > ..\binding-61.log 2>&1; cmake --build build-binding-61 -j --config Release >> ..\binding-61.log 2>&1
+cmake -B build-binding-52 -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake"  -DCMAKE_CUDA_ARCHITECTURES="52" -DGGML_CUDA=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake" -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON > ..\binding-52.log 2>&1; cmake --build build-binding-52 -j --config Release >> ..\binding-52.log 2>&1
+cmake -B build-binding-50 -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake"  -DCMAKE_CUDA_ARCHITECTURES="50" -DGGML_CUDA=1 -DGGML_RPC=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=1 -DOpenVINO_DIR="C:\lib\openvino\runtime\cmake" -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON > ..\binding-50.log 2>&1; cmake --build build-binding-50 -j --config Release >> ..\binding-50.log 2>&1
+
+
+cmake -B build-test -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake" -DCMAKE_CUDA_ARCHITECTURES="50;75" -DGGML_CUDA=ON -DGGML_RPC=ON -DGGML_VULKAN=ON -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=ON -DOpenVINO_DIR="C:\lib\openvino\2024.6.0\runtime\cmake" -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON 
+cmake --build build-test -j --config Release
+
+> ..\binding.log 2>&1; 
+ >> ..\binding.log 2>&1; cmake --build build -j >> ..\binding.log 2>&1
+
+MacARM
+cmake -B build-vino -DWHISPER_SDL2=ON -DWHISPER_BINDINGS_FLAT=ON -DGGML_BACKEND_DL=ON -DGGML_NATIVE=OFF -DBUILD_SHARED_LIBS=ON -DWHISPER_COREML=ON -DGGML_RPC=ON -DGGML_METAL=ON -DGGML_METAL_USE_BF16=ON -DWHISPER_OPENVINO=ON -DOpenVINO_DIR="/Volumes/SN770/build_libs/openvino/2025.2.0/runtime/cmake"
+cmake -B build -DWHISPER_BINDINGS_FLAT=ON -DBUILD_SHARED_LIBS=ON -DWHISPER_COREML=ON -DGGML_METAL=ON -DGGML_METAL_USE_BF16=ON
+cmake --build build-vino --config Release
+cmake --build build --config Release
+
+Aladdin = 5379 words (16M mp3 35m 06s)
+
+| :--------------------------------- | --------: | -----------: |
+| Platform                           | Timing  : | Words Per Min: |
+| :--------------------------------- | --------: | -----------: |
+| PC (Perf Linux)  32G  8C/16T/4070M |   126.425 | 2552.817 wpm |
+| Mac Mini M2 Pro  16G 10C/16G/16N   |   156.521 | 2061.960 wpm |
+| Mac Mini M4      16G 10C/10G/16N   |   172.623 | 1869.623 wpm |
+| PC (Perf Mode)   32G  8C/16T/4070M |   186.730 | 1728.378 wpm |
+| PC (Hybrid Mode) 32G  8C/16T/4070M |   202.850 | 1591.027 wpm |
+| Mac Mini M2      16G  8C/10G/16N   |   223.157 | 1446.246 wpm |
+| Mac Mini M1       8G  8C/ 8G/16N   |   357.103 |  903.772 wpm |
+| PC (Perf VINO)   32G  8C/16T/NOGPU |  3202.817 |          wpm |
+| PC (Perf BLAS)   32G  8C/16T/NOGPU |           |          wpm |
+| PC (Perf CPU)    32G  8C/16T/NOGPU |  1803.965 |  178.906 wpm |
+| Pi5               8G               |  4915.470 |   65.658 wpm |
+| :--------------------------------- | --------: | -----------: |
+
+M2 NoML = 345.638
+M1 NoML = 541.221
+
+PC (Perf Linux)  32G  8C/16T/4070M =   2.975
+PC (Perf Mode)   32G  8C/16T/4070M =   3.694
+PC (Hybrid Mode) 32G  8C/16T/4070M =   3.721
+Mac Mini M4      16G 10C/10G/16N   =   6.929
+Mac Mini M2 Pro  16G 10C/16G/16N   =   7.865
+Mac Mini M2      16G  8C/10G/16N   =  11.020
+Mac Mini M1       8G  8C/ 8G/16N   =  16.348
+Pi5               8G               = 167.245
+
+CD \fix\whisper
+.\build\bin\Release\whisper-cli.exe -m D:\models\ggml-medium.bin -f C:\work\aladdin.mp3
+
+5379 / (1803.965 / 60)
+
+Bench : PC (Perf Linux)  = 2.975
+CLI : PC (Perf Linux)  = 126.425 = 2552.817 wpm
+
+ = Win * 147%
+ = Win * 124%
+ 
+186.730 / 126.425
+
+
+Mac M4
+=======
+cmake -B build -DWHISPER_SDL2=ON -DWHISPER_BINDINGS_FLAT=ON -DGGML_BACKEND_DL=ON -DGGML_NATIVE=OFF -DBUILD_SHARED_LIBS=ON -DWHISPER_COREML=ON -DWHISPER_COREML_ALLOW_FALLBACK=ON -DGGML_RPC=ON -DGGML_METAL=ON -DGGML_METAL_USE_BF16=ON 
+cmake --build build --config Release
+=======
+-DWHISPER_OPENVINO=ON -DOpenVINO_DIR="~/build_libs/openvino/2025.2.0/runtime/cmake"
+brew install pugixml
+libpugixml.1.dylib
+=======
+
+Pi 5
+=======
+cmake -B build -DWHISPER_SDL2=ON -DGGML_RPC=1 -DGGML_BLAS=ON -DGGML_BLAS_VENDOR="OpenBLAS" -DWHISPER_BINDINGS_FLAT=ON -DGGML_BACKEND_DL=ON -DBUILD_SHARED_LIBS=ON -DGGML_CPU_AARCH64=ON -DGGML_NATIVE=OFF
+cmake --build build --config Release
+
+Win11 Test
+=====
+cmake -B build -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake" -DGGML_CUDA=ON -DGGML_RPC=ON -DGGML_VULKAN=ON -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DWHISPER_OPENVINO=ON -DOpenVINO_DIR="C:\lib\openvino\2024.6.0\runtime\cmake" -DNDEBUG=ON
+cmake --build build -j
+
+
+cmake -B build -DWHISPER_SDL2=ON -DWHISPER_COREML=ON -DWHISPER_COREML_ALLOW_FALLBACK=ON -DGGML_RPC=ON -DGGML_METAL=ON -DGGML_METAL_USE_BF16=ON 
+
+cmake -B build -DWHISPER_BACKEND_DL=ON -DCMAKE_INSTALL_PREFIX=whisper-built -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake"
+
+cpu-alderlake.dll score: 0
+cpu-haswell.dll score: 44
+cpu-icelake.dll score: 1161
+cpu-sandybridge.dll score: 17
+cpu-skylakex.dll score: 137
+cpu-sse42.dll score: 5
+cpu-x64.dll score: 1
+
+-- Adding CPU backend variant ggml-cpu-x64:
+-- Adding CPU backend variant ggml-cpu-sse42: /arch:SSE4.2 GGML_SSE42
+-- Adding CPU backend variant ggml-cpu-sandybridge: /arch:AVX GGML_AVX
+-- Adding CPU backend variant ggml-cpu-haswell: /arch:AVX2 GGML_AVX2;GGML_FMA;GGML_F16C;__BMI2__;GGML_BMI2
+-- Adding CPU backend variant ggml-cpu-skylakex: /arch:AVX512 GGML_AVX512;__BMI2__;GGML_BMI2
+-- Adding CPU backend variant ggml-cpu-icelake: /arch:AVX512 GGML_AVX512;__AVX512VBMI__;__AVX512VNNI__;GGML_AVX512_VNNI;__BMI2__;GGML_BMI2
+-- Adding CPU backend variant ggml-cpu-alderlake: /arch:AVX2 GGML_AVX2;GGML_FMA;GGML_F16C;__AVXVNNI__;GGML_AVX_VNNI;__BMI2__;GGML_BMI2
+
+x64         ( Pre Core)
+sse42       ( 1st Core)
+sandybridge ( 2nd Core)
+haswell     ( 4th Core)
+skylakex    ( 6th Core)
+icelake     (10th Core)
+alderlake   (12th Core)
+
+cmake -B build -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake" -DGGML_BLAS_VENDOR=OpenBLAS -DOpenVINO_DIR="C:\lib\openvino\2024.6.0\runtime\cmake" -DGGML_CUDA=ON -DGGML_VULKAN=ON
+
+base.en -> 8aladdin
+
+haswell
+=======
+cpu-only
+whisper_print_timings:     load time =    114.10 ms
+whisper_print_timings:     fallbacks =    0 p /   2 h
+whisper_print_timings:      mel time =    819.78 ms
+whisper_print_timings:   sample time =  10589.72 ms / 27049 runs (     0.39 ms per run)
+whisper_print_timings:   encode time =  46420.23 ms /    70 runs (   663.15 ms per run)
+whisper_print_timings:   decode time =   1331.31 ms /   462 runs (     2.88 ms per run)
+whisper_print_timings:   batchd time =  32647.63 ms / 26241 runs (     1.24 ms per run)
+whisper_print_timings:   prompt time =  11083.91 ms / 15299 runs (     0.72 ms per run)
+whisper_print_timings:    total time =    103.669
+
+blas
+whisper_print_timings:     load time =    112.52 ms
+whisper_print_timings:     fallbacks =    1 p /   0 h
+whisper_print_timings:      mel time =    802.93 ms
+whisper_print_timings:   sample time =  11944.67 ms / 27512 runs (     0.43 ms per run)
+whisper_print_timings:   encode time = 528249.94 ms /    70 runs (  7546.43 ms per run)
+whisper_print_timings:   decode time =   1183.09 ms /   363 runs (     3.26 ms per run)
+whisper_print_timings:   batchd time =  37894.42 ms / 26798 runs (     1.41 ms per run)
+whisper_print_timings:   prompt time = 154725.73 ms / 15526 runs (     9.97 ms per run)
+whisper_print_timings:    total time =    735.609.50
+
+vino
+whisper_print_timings:     load time =    112.82 ms
+whisper_print_timings:     fallbacks =    0 p /   0 h
+whisper_print_timings:      mel time =    812.55 ms
+whisper_print_timings:   sample time =  10199.08 ms / 25895 runs (     0.39 ms per run)
+whisper_print_timings:   encode time =   9671.83 ms /    70 runs (   138.17 ms per run)
+whisper_print_timings:   decode time =   1378.05 ms /   457 runs (     3.02 ms per run)
+whisper_print_timings:   batchd time =  34000.93 ms / 25092 runs (     1.36 ms per run)
+whisper_print_timings:   prompt time =  12594.03 ms / 15299 runs (     0.82 ms per run)
+whisper_print_timings:    total time =     69.657
+
+blas-vino
+whisper_print_timings:     load time =    115.99 ms
+whisper_print_timings:     fallbacks =    3 p /   0 h
+whisper_print_timings:      mel time =    799.40 ms
+whisper_print_timings:   sample time =  13796.58 ms / 30603 runs (     0.45 ms per run)
+whisper_print_timings:   encode time =  73183.59 ms /    70 runs (  1045.48 ms per run)
+whisper_print_timings:   decode time =   1808.20 ms /   568 runs (     3.18 ms per run)
+whisper_print_timings:   batchd time =  45149.65 ms / 29676 runs (     1.52 ms per run)
+whisper_print_timings:   prompt time = 163639.03 ms / 15598 runs (    10.49 ms per run)
+whisper_print_timings:    total time =    299.334
+
+skylakex
+========
+cpu-only
+whisper_print_timings:     load time =    111.07 ms
+whisper_print_timings:     fallbacks =    2 p /   0 h
+whisper_print_timings:      mel time =    817.42 ms
+whisper_print_timings:   sample time =  11760.22 ms / 26979 runs (     0.44 ms per run)
+whisper_print_timings:   encode time =  89666.17 ms /    70 runs (  1280.95 ms per run)
+whisper_print_timings:   decode time =   1558.62 ms /   519 runs (     3.00 ms per run)
+whisper_print_timings:   batchd time =  46495.80 ms / 26104 runs (     1.78 ms per run)
+whisper_print_timings:   prompt time =  21325.59 ms / 15753 runs (     1.35 ms per run)
+whisper_print_timings:    total time =    172.412
+
+blas
+whisper_print_timings:     load time =    112.43 ms
+whisper_print_timings:     fallbacks =    4 p /  33 h
+whisper_print_timings:      mel time =    786.76 ms
+whisper_print_timings:   sample time =  15288.75 ms / 30274 runs (     0.51 ms per run)
+whisper_print_timings:   encode time = 552137.38 ms /    70 runs (  7887.68 ms per run)
+whisper_print_timings:   decode time =   9437.78 ms /  3056 runs (     3.09 ms per run)
+whisper_print_timings:   batchd time =  48756.21 ms / 26854 runs (     1.82 ms per run)
+whisper_print_timings:   prompt time = 162395.95 ms / 15826 runs (    10.26 ms per run)
+whisper_print_timings:    total time =    789.621
+
+vino
+whisper_print_timings:     load time =    112.25 ms
+whisper_print_timings:     fallbacks =    1 p /   0 h
+whisper_print_timings:      mel time =    787.86 ms
+whisper_print_timings:   sample time =  10124.24 ms / 26926 runs (     0.38 ms per run)
+whisper_print_timings:   encode time =  10838.50 ms /    70 runs (   154.84 ms per run)
+whisper_print_timings:   decode time =   1303.54 ms /   440 runs (     2.96 ms per run)
+whisper_print_timings:   batchd time =  41567.79 ms / 26135 runs (     1.59 ms per run)
+whisper_print_timings:   prompt time =  18566.37 ms / 15526 runs (     1.20 ms per run)
+whisper_print_timings:    total time =      84.100
+
+blas-vino
+whisper_print_timings:     load time =    112.67 ms
+whisper_print_timings:     fallbacks =    4 p /   0 h
+whisper_print_timings:      mel time =    814.85 ms
+whisper_print_timings:   sample time =  10510.24 ms / 26461 runs (     0.40 ms per run)
+whisper_print_timings:   encode time =  65866.97 ms /    70 runs (   940.96 ms per run)
+whisper_print_timings:   decode time =   2383.51 ms /   771 runs (     3.09 ms per run)
+whisper_print_timings:   batchd time =  41554.15 ms / 25324 runs (     1.64 ms per run)
+whisper_print_timings:   prompt time = 159674.34 ms / 16207 runs (     9.85 ms per run)
+whisper_print_timings:    total time =    281.754
+
+icelake
+=======
+cpu-only
+whisper_print_timings:     load time =    111.33 ms
+whisper_print_timings:     fallbacks =    2 p /   0 h
+whisper_print_timings:      mel time =    823.55 ms
+whisper_print_timings:   sample time =  12258.46 ms / 26979 runs (     0.45 ms per run)
+whisper_print_timings:   encode time =  95379.59 ms /    70 runs (  1362.57 ms per run)
+whisper_print_timings:   decode time =   1651.22 ms /   519 runs (     3.18 ms per run)
+whisper_print_timings:   batchd time =  49048.49 ms / 26104 runs (     1.88 ms per run)
+whisper_print_timings:   prompt time =  23147.59 ms / 15753 runs (     1.47 ms per run)
+whisper_print_timings:    total time =    183.102
+
+blas
+whisper_print_timings:     load time =    113.21 ms
+whisper_print_timings:     fallbacks =    4 p /  33 h
+whisper_print_timings:      mel time =    793.08 ms
+whisper_print_timings:   sample time =  15534.86 ms / 30274 runs (     0.51 ms per run)
+whisper_print_timings:   encode time =  566872.38 ms /    70 runs (  8098.18 ms per run)
+whisper_print_timings:   decode time =   9749.22 ms /  3056 runs (     3.19 ms per run)
+whisper_print_timings:   batchd time =  49430.11 ms / 26854 runs (     1.84 ms per run)
+whisper_print_timings:   prompt time =  167213.02 ms / 15826 runs (    10.57 ms per run)
+whisper_print_timings:    total time =     810.417
+
+vino
+whisper_print_timings:     load time =    110.68 ms
+whisper_print_timings:     fallbacks =    1 p /   0 h
+whisper_print_timings:      mel time =    798.52 ms
+whisper_print_timings:   sample time =  10046.05 ms / 26926 runs (     0.37 ms per run)
+whisper_print_timings:   encode time =  10730.51 ms /    70 runs (   153.29 ms per run)
+whisper_print_timings:   decode time =   1333.25 ms /   440 runs (     3.03 ms per run)
+whisper_print_timings:   batchd time =  41477.04 ms / 26135 runs (     1.59 ms per run)
+whisper_print_timings:   prompt time =  18624.11 ms / 15526 runs (     1.20 ms per run)
+whisper_print_timings:    total time =     83.917
+
+blas-vino
+whisper_print_timings:     load time =    115.19 ms
+whisper_print_timings:     fallbacks =    4 p /   0 h
+whisper_print_timings:      mel time =    770.58 ms
+whisper_print_timings:   sample time =  10661.80 ms / 26461 runs (     0.40 ms per run)
+whisper_print_timings:   encode time =  66716.88 ms /    70 runs (   953.10 ms per run)
+whisper_print_timings:   decode time =   2424.94 ms /   771 runs (     3.15 ms per run)
+whisper_print_timings:   batchd time =  42498.82 ms / 25324 runs (     1.68 ms per run)
+whisper_print_timings:   prompt time = 161386.53 ms / 16207 runs (     9.96 ms per run)
+whisper_print_timings:    total time =    285.537
+
+cuda-haswell
+============
+cpu-only
+whisper_print_timings:     load time =    190.70 ms
+whisper_print_timings:     fallbacks =    2 p /   0 h
+whisper_print_timings:      mel time =    815.35 ms
+whisper_print_timings:   sample time =   7947.09 ms / 25931 runs (     0.31 ms per run)
+whisper_print_timings:   encode time =   1425.59 ms /    70 runs (    20.37 ms per run)
+whisper_print_timings:   decode time =   1452.04 ms /   608 runs (     2.39 ms per run)
+whisper_print_timings:   batchd time =  22879.88 ms / 24967 runs (     0.92 ms per run)
+whisper_print_timings:   prompt time =    401.06 ms / 15753 runs (     0.03 ms per run)
+whisper_print_timings:    total time =     35.725
+
+vino
+whisper_print_timings:     load time =    215.94 ms
+whisper_print_timings:     fallbacks =    1 p /   0 h
+whisper_print_timings:      mel time =    781.98 ms
+whisper_print_timings:   sample time =   8177.49 ms / 26958 runs (     0.30 ms per run)
+whisper_print_timings:   encode time =   4756.12 ms /    70 runs (    67.94 ms per run)
+whisper_print_timings:   decode time =    652.81 ms /   254 runs (     2.57 ms per run)
+whisper_print_timings:   batchd time =  23266.95 ms / 26353 runs (     0.88 ms per run)
+whisper_print_timings:   prompt time =    422.25 ms / 15528 runs (     0.03 ms per run)
+whisper_print_timings:    total time =     39.103
+
+cuda-skylakex
+=============
+cpu-only
+whisper_print_timings:     load time =    194.39 ms
+whisper_print_timings:     fallbacks =    2 p /   0 h
+whisper_print_timings:      mel time =    824.52 ms
+whisper_print_timings:   sample time =   8950.80 ms / 25931 runs (     0.35 ms per run)
+whisper_print_timings:   encode time =   1412.38 ms /    70 runs (    20.18 ms per run)
+whisper_print_timings:   decode time =   1445.77 ms /   608 runs (     2.38 ms per run)
+whisper_print_timings:   batchd time =  21928.29 ms / 24967 runs (     0.88 ms per run)
+whisper_print_timings:   prompt time =    407.67 ms / 15753 runs (     0.03 ms per run)
+whisper_print_timings:    total time =     35.781
+
+blas
+whisper_print_timings:     load time =    205.02 ms
+whisper_print_timings:     fallbacks =    2 p /   0 h
+whisper_print_timings:      mel time =    803.10 ms
+whisper_print_timings:   sample time =   9631.41 ms / 25931 runs (     0.37 ms per run)
+whisper_print_timings:   encode time =   1406.49 ms /    70 runs (    20.09 ms per run)
+whisper_print_timings:   decode time =   1359.58 ms /   608 runs (     2.24 ms per run)
+whisper_print_timings:   batchd time =  20473.69 ms / 24967 runs (     0.82 ms per run)
+whisper_print_timings:   prompt time =    402.15 ms / 15753 runs (     0.03 ms per run)
+whisper_print_timings:    total time =     34.908
+
+vino
+whisper_print_timings:     load time =    201.94 ms
+whisper_print_timings:     fallbacks =    1 p /   0 h
+whisper_print_timings:      mel time =    819.72 ms
+whisper_print_timings:   sample time =   7964.62 ms / 26958 runs (     0.30 ms per run)
+whisper_print_timings:   encode time =   4793.81 ms /    70 runs (    68.48 ms per run)
+whisper_print_timings:   decode time =    715.17 ms /   254 runs (     2.82 ms per run)
+whisper_print_timings:   batchd time =  25077.90 ms / 26353 runs (     0.95 ms per run)
+whisper_print_timings:   prompt time =    422.92 ms / 15528 runs (     0.03 ms per run)
+whisper_print_timings:    total time =     40.797
+
+blas-vino
+whisper_print_timings:     load time =    197.66 ms
+whisper_print_timings:     fallbacks =    1 p /   0 h
+whisper_print_timings:      mel time =    812.96 ms
+whisper_print_timings:   sample time =   9711.72 ms / 26958 runs (     0.36 ms per run)
+whisper_print_timings:   encode time =   5779.55 ms /    70 runs (    82.56 ms per run)
+whisper_print_timings:   decode time =    587.81 ms /   254 runs (     2.31 ms per run)
+whisper_print_timings:   batchd time =  21410.11 ms / 26353 runs (     0.81 ms per run)
+whisper_print_timings:   prompt time =    414.64 ms / 15528 runs (     0.03 ms per run)
+whisper_print_timings:    total time =     39.678
+
+whisper_ctx_init_openvino_encoder_with_state: loading OpenVINO model from 'C:\models\ggml-base.en-encoder-openvino.xml'
+whisper_ctx_init_openvino_encoder_with_state: first run on a device may take a while ...
+whisper_openvino_init: path_model = C:\models\ggml-base.en-encoder-openvino.xml, device = CUDA0, cache_dir = C:\models\ggml-base.en-encoder-openvino-cache
+in openvino encoder compile routine: exception: Exception from src\inference\src\cpp\core.cpp:107:
+Exception from src\inference\src\dev\core_impl.cpp:567:
+Device with "CUDA0" name is not registered in the OpenVINO Runtime
+
+cuda-haswell-aladdin full
+blas-cuda
+whisper_print_timings:      load time =  1151.90 ms
+whisper_print_timings:      fallbacks =   1 p /   0 h
+whisper_print_timings:       mel time =   849.54 ms
+whisper_print_timings:    sample time =  8992.25 ms / 26344 runs (     0.34 ms per run)
+whisper_print_timings:    encode time = 10827.62 ms /    71 runs (   152.50 ms per run)
+whisper_print_timings:    decode time =  5632.24 ms /   570 runs (     9.88 ms per run)
+whisper_print_timings:    batchd time = 82880.43 ms / 25416 runs (     3.26 ms per run)
+whisper_print_timings:    prompt time =  1854.94 ms / 15878 runs (     0.12 ms per run)
+whisper_print_timings:      total time =  113.l31
+
+
+cuda-skylakex-aladdin full
+blas-cuda
+whisper_print_timings:     load time =   1161.94 ms
+whisper_print_timings:     fallbacks =    0 p /   0 h
+whisper_print_timings:      mel time =    799.34 ms
+whisper_print_timings:   sample time =  12995.30 ms / 37236 runs (     0.35 ms per run)
+whisper_print_timings:   encode time =  12212.70 ms /    80 runs (   152.66 ms per run)
+whisper_print_timings:   decode time =    549.60 ms /    55 runs (     9.99 ms per run)
+whisper_print_timings:   batchd time =  95481.49 ms / 36782 runs (     2.60 ms per run)
+whisper_print_timings:   prompt time =   2067.62 ms / 17538 runs (     0.12 ms per run)
+whisper_print_timings:    total time =    126.438
+
+Lintest
+cmake -B build -DGGML_BLAS_VENDOR=OpenBLAS -DOpenVINO_DIR="C:\lib\openvino\2024.6.0\runtime\cmake" -DGGML_CUDA=ON -DGGML_VULKAN=ON
+
+.\build\bin\Release\whisper-cli.exe -m C:\models\ggml-medium.en.bin -f C:\work\aladdin.mp3 -ng -nov -cpu 4 -cuda -nob
