@@ -590,3 +590,34 @@ Lintest
 cmake -B build -DGGML_BLAS_VENDOR=OpenBLAS -DOpenVINO_DIR="C:\lib\openvino\2024.6.0\runtime\cmake" -DGGML_CUDA=ON -DGGML_VULKAN=ON
 
 .\build\bin\Release\whisper-cli.exe -m C:\models\ggml-medium.en.bin -f C:\work\aladdin.mp3 -ng -nov -cpu 4 -cuda -nob
+
+sudo apt-get install libtbb-dev
+
+source ~/build_libs/vulkan/1.4.313.0/setup-env.sh 
+~/build_libs/openvino/2024.6.0/setupvars.sh 
+cmake -B build -DOpenVINO_DIR="~/build_libs/openvino/2024.6.0/runtime/cmake" -DGGML_CUDA=ON -DGGML_VULKAN=ON
+
+whisper_print_timings:     load time =   1833.41 ms
+whisper_print_timings:     fallbacks =    0 p /   0 h
+whisper_print_timings:      mel time =   1262.97 ms
+whisper_print_timings:   sample time =  11276.91 ms / 37232 runs (     0.30 ms per run)
+whisper_print_timings:   encode time =  15167.01 ms /    79 runs (   191.99 ms per run)
+whisper_print_timings:   decode time =    603.97 ms /    49 runs (    12.33 ms per run)
+whisper_print_timings:   batchd time =  99802.76 ms / 36789 runs (     2.71 ms per run)
+whisper_print_timings:   prompt time =   3373.63 ms / 17311 runs (     0.19 ms per run)
+whisper_print_timings:    total time =   135.308 s
+
+
+
+cmake -B build -DOpenVINO_DIR="~/build_libs/openvino/2024.6.0/runtime/cmake" -DGGML_VULKAN=ON -DGGML_CUDA=ON -DCMAKE_CUDA_COMPILER="/usr/local/cuda-12.9/bin/nvcc"
+
+
+whisper_print_timings:     load time =    444.08 ms
+whisper_print_timings:     fallbacks =    0 p /   0 h
+whisper_print_timings:      mel time =   1275.05 ms
+whisper_print_timings:   sample time =   8933.07 ms / 37075 runs (     0.24 ms per run)
+whisper_print_timings:   encode time =  14349.26 ms /    80 runs (   179.37 ms per run)
+whisper_print_timings:   decode time =    276.83 ms /    39 runs (     7.10 ms per run)
+whisper_print_timings:   batchd time =  60688.25 ms / 36637 runs (     1.66 ms per run)
+whisper_print_timings:   prompt time =   2478.80 ms / 17538 runs (     0.14 ms per run)
+whisper_print_timings:    total time =    89.784 s
