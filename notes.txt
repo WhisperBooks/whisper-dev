@@ -586,16 +586,21 @@ whisper_print_timings:   batchd time =  95481.49 ms / 36782 runs (     2.60 ms p
 whisper_print_timings:   prompt time =   2067.62 ms / 17538 runs (     0.12 ms per run)
 whisper_print_timings:    total time =    126.438
 
-Lintest
+
 cmake -B build -DGGML_BLAS_VENDOR=OpenBLAS -DOpenVINO_DIR="C:\lib\openvino\2024.6.0\runtime\cmake" -DGGML_CUDA=ON -DGGML_VULKAN=ON
 
 .\build\bin\Release\whisper-cli.exe -m C:\models\ggml-medium.en.bin -f C:\work\aladdin.mp3 -ng -nov -cpu 4 -cuda -nob
 
-sudo apt-get install libtbb-dev
+Win64
+cmake -B build -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake" -DGGML_BLAS_VENDOR=OpenBLAS -DOpenVINO_DIR="C:\lib\openvino\2024.6.0\runtime\cmake" -DGGML_CUDA=ON -DGGML_VULKAN=ON
+
+Ubu24
+
+sudo apt-get install cmake libsdl2-dev glslc build-essential git libgl1-mesa-dev ffmpeg libopenblas-openmp-dev libopenmpi-dev libtbb-dev
 
 source ~/build_libs/vulkan/1.4.313.0/setup-env.sh 
 ~/build_libs/openvino/2024.6.0/setupvars.sh 
-cmake -B build -DOpenVINO_DIR="~/build_libs/openvino/2024.6.0/runtime/cmake" -DGGML_CUDA=ON -DGGML_VULKAN=ON
+cmake -B build -DGGML_CUDA=ON -DGGML_VULKAN=ON
 
 whisper_print_timings:     load time =   1833.41 ms
 whisper_print_timings:     fallbacks =    0 p /   0 h
@@ -609,8 +614,10 @@ whisper_print_timings:    total time =   135.308 s
 
 
 
-cmake -B build -DOpenVINO_DIR="~/build_libs/openvino/2024.6.0/runtime/cmake" -DGGML_VULKAN=ON -DGGML_CUDA=ON -DCMAKE_CUDA_COMPILER="/usr/local/cuda-12.9/bin/nvcc"
-
+cmake -B build -DGGML_VULKAN=ON -DGGML_CUDA=ON 
+// -DCMAKE_CUDA_ARCHITECTURES="50;75"
+// -DCMAKE_CUDA_COMPILER="/usr/local/cuda-12.9/bin/nvcc"
+// -DOpenVINO_DIR="~/build_libs/openvino/2024.6.0/runtime/cmake" 
 
 whisper_print_timings:     load time =    444.08 ms
 whisper_print_timings:     fallbacks =    0 p /   0 h
@@ -621,3 +628,16 @@ whisper_print_timings:   decode time =    276.83 ms /    39 runs (     7.10 ms p
 whisper_print_timings:   batchd time =  60688.25 ms / 36637 runs (     1.66 ms per run)
 whisper_print_timings:   prompt time =   2478.80 ms / 17538 runs (     0.14 ms per run)
 whisper_print_timings:    total time =    89.784 s
+
+IGPU
+whisper_print_timings:     load time =   1017.17 ms
+whisper_print_timings:     fallbacks =   0 p /   0 h
+whisper_print_timings:      mel time =    797.68 ms
+whisper_print_timings:   sample time =  12312.26 ms / 36749 runs (     0.34 ms per run)
+whisper_print_timings:   encode time = 497852.75 ms /    88 runs (  5657.42 ms per run)
+whisper_print_timings:   decode time =  12559.69 ms /   283 runs (    44.38 ms per run)
+whisper_print_timings:   batchd time = 775283.12 ms / 36027 runs (    21.52 ms per run)
+whisper_print_timings:   prompt time =  85695.55 ms / 19521 runs (     4.39 ms per run)
+whisper_print_timings:    total time =   1386.908 s
+
+
