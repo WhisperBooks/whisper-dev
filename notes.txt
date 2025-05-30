@@ -619,15 +619,29 @@ cmake -B build -DGGML_VULKAN=ON -DGGML_CUDA=ON
 // -DCMAKE_CUDA_COMPILER="/usr/local/cuda-12.9/bin/nvcc"
 // -DOpenVINO_DIR="~/build_libs/openvino/2024.6.0/runtime/cmake" 
 
-whisper_print_timings:     load time =    444.08 ms
-whisper_print_timings:     fallbacks =    0 p /   0 h
-whisper_print_timings:      mel time =   1275.05 ms
-whisper_print_timings:   sample time =   8933.07 ms / 37075 runs (     0.24 ms per run)
-whisper_print_timings:   encode time =  14349.26 ms /    80 runs (   179.37 ms per run)
-whisper_print_timings:   decode time =    276.83 ms /    39 runs (     7.10 ms per run)
-whisper_print_timings:   batchd time =  60688.25 ms / 36637 runs (     1.66 ms per run)
-whisper_print_timings:   prompt time =   2478.80 ms / 17538 runs (     0.14 ms per run)
-whisper_print_timings:    total time =    89.784 s
+CUDA
+Device 0: NVIDIA GeForce RTX 4070 Laptop GPU, compute capability 8.9, VMM: yes
+whisper_print_timings:     load time =    449.21 ms
+whisper_print_timings:     fallbacks =   0 p /   0 h
+whisper_print_timings:      mel time =   1272.14 ms
+whisper_print_timings:   sample time =   9069.93 ms / 37075 runs (     0.24 ms per run)
+whisper_print_timings:   encode time =  14214.65 ms /    80 runs (   177.68 ms per run)
+whisper_print_timings:   decode time =    277.17 ms /    39 runs (     7.11 ms per run)
+whisper_print_timings:   batchd time =  60951.87 ms / 36637 runs (     1.66 ms per run)
+whisper_print_timings:   prompt time =   2452.07 ms / 17538 runs (     0.14 ms per run)
+whisper_print_timings:    total time =     90.009 s
+
+VULKAN
+ggml_vulkan: 0 = NVIDIA GeForce RTX 4070 Laptop GPU (NVIDIA) | uma: 0 | fp16: 1 | warp size: 32 | shared memory: 49152 | int dot: 1 | matrix cores: KHR_coopmat
+whisper_print_timings:     load time =   2009.84 ms
+whisper_print_timings:     fallbacks =   0 p /   0 h
+whisper_print_timings:      mel time =   1286.41 ms
+whisper_print_timings:   sample time =   9189.61 ms / 37232 runs (     0.25 ms per run)
+whisper_print_timings:   encode time =  14467.75 ms /    79 runs (   183.14 ms per run)
+whisper_print_timings:   decode time =    412.17 ms /    49 runs (     8.41 ms per run)
+whisper_print_timings:   batchd time =  99221.52 ms / 36789 runs (     2.70 ms per run)
+whisper_print_timings:   prompt time =   3287.00 ms / 17311 runs (     0.19 ms per run)
+whisper_print_timings:    total time =    131.703 s
 
 IGPU
 whisper_print_timings:     load time =   1017.17 ms
