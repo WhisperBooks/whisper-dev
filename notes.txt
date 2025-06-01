@@ -646,3 +646,4 @@ source ~/build_libs/vulkan/1.4.313.0/setup-env.sh
 ~/build_libs/openvino/2024.6.0/setupvars.sh 
 cmake -B build -DGGML_CUDA=ON -DGGML_VULKAN=ON
 
+>> results.log 2>&1
