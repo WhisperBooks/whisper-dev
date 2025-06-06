@@ -650,6 +650,9 @@ sudo cp /var/cuda-repo-ubuntu2404-12-9-local/cuda-*-keyring.gpg /usr/share/keyri
 sudo apt-get update
 sudo apt-get -y install cuda-toolkit-12-9
 
+git submodule update --init --recursive
+git submodule update --recursive --remote
+
 source ~/build_libs/vulkan/1.4.313.0/setup-env.sh 
 ~/build_libs/openvino/2024.6.0/setupvars.sh 
 cmake -B build -DGGML_CUDA=ON -DGGML_VULKAN=ON
