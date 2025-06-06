@@ -639,11 +639,20 @@ whisper_print_timings:    total time =   1386.908 s
 
 sudo apt-get install cmake libsdl2-dev glslc build-essential git libgl1-mesa-dev ffmpeg libopenblas-openmp-dev libopenmpi-dev libtbb-dev
 wget https://peardox.com/data/data.tgz
-wget https://peardox.com/data/cuda-12.9.0.deb
 wget https://peardox.com/data/build_libs.tgz
+wget https://peardox.com/data/scaleway-L4.tgz
+
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-ubuntu2404.pin
+sudo mv cuda-ubuntu2404.pin /etc/apt/preferences.d/cuda-repository-pin-600
+wget https://peardox.com/data/cuda-12.9.0.deb
+sudo dpkg -i cuda-12.9.0.deb
+sudo cp /var/cuda-repo-ubuntu2404-12-9-local/cuda-*-keyring.gpg /usr/share/keyrings/
+sudo apt-get update
+sudo apt-get -y install cuda-toolkit-12-9
 
 source ~/build_libs/vulkan/1.4.313.0/setup-env.sh 
 ~/build_libs/openvino/2024.6.0/setupvars.sh 
 cmake -B build -DGGML_CUDA=ON -DGGML_VULKAN=ON
+cmake --build build -j 4 --config Release
 
->> results.log 2>&1
+ >> ~/scaleway-L4-1-24G.log 2>&1
