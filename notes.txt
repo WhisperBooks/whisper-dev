@@ -650,12 +650,23 @@ sudo cp /var/cuda-repo-ubuntu2404-12-9-local/cuda-*-keyring.gpg /usr/share/keyri
 sudo apt-get update
 sudo apt-get -y install cuda-toolkit-12-9
 
-git submodule update --init --recursive
-git submodule update --recursive --remote
+echo $LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=${HOME}/build_libs/openvino/2024.6.0/runtime/lib/intel64/:${HOME}/build_libs/openvino/2024.6.0/runtime/3rdparty/tbb/lib/:${HOME}/whisp/built/lib/
+echo $LD_LIBRARY_PATH
+
+build/bin/whisper-bench2 -m ~/models/ggml-base.en.bin
+build/bin/whisper-cli2 -m ~/models/ggml-base.en.bin -f ~/audio/aladdin.mp3 -ng -cuda > scaleway-L4S-1-24G-cuda-aladdin.txt 2>&1
+ln -s ${HOME}/models/ models
+ln -s ${HOME}/audio/ audio
+chmod +v bench-all.sh
+./bench-all.sh > ~/scaleway-L4-1-24G-bench-all.txt 2>&1
+./bench-all.sh > ~/scaleway-L40S-1-48G-bench-all.txt 2>&1
 
 source ~/build_libs/vulkan/1.4.313.0/setup-env.sh 
 ~/build_libs/openvino/2024.6.0/setupvars.sh 
 cmake -B build -DGGML_CUDA=ON -DGGML_VULKAN=ON
 cmake --build build -j 4 --config Release
 
- >> ~/scaleway-L4-1-24G.log 2>&1
+ >> ~/scaleway-L4-2-24G.txt 2>&1
+ 
+ 
