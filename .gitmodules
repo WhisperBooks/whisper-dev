@@ -1,4 +1,4 @@
 [submodule "whisper.cpp"]
 	path = whisper.cpp
 	url = https://github.com/WhisperBooks/whisper.cpp
-	branch = v175-merge
+	branch = v175-merge-01

@@ -589,7 +589,8 @@ whisper_print_timings:    total time =    126.438
 
 cmake -B build -DGGML_BLAS_VENDOR=OpenBLAS -DOpenVINO_DIR="C:\lib\openvino\2024.6.0\runtime\cmake" -DGGML_CUDA=ON -DGGML_VULKAN=ON
 
-.\build\bin\Release\whisper-cli.exe -m C:\models\ggml-medium.en.bin -f C:\work\aladdin.mp3 -ng -nov -cpu 4 -cuda -nob
+.\build\bin\Release\whisper-cli2.exe -m C:\models\ggml-medium.en.bin -f C:\work\aladdin.mp3 -ng -cuda
+-nov -cpu 4 -cuda -nob
 
 Win64
 cmake -B build -DCMAKE_TOOLCHAIN_FILE="D:\git\vcpkg\scripts\buildsystems\vcpkg.cmake" -DGGML_BLAS_VENDOR=OpenBLAS -DOpenVINO_DIR="C:\lib\openvino\2024.6.0\runtime\cmake" -DGGML_CUDA=ON -DGGML_VULKAN=ON
@@ -659,14 +660,24 @@ build/bin/whisper-cli2 -m ~/models/ggml-base.en.bin -f ~/audio/aladdin.mp3 -ng -
 ln -s ${HOME}/models/ models
 ln -s ${HOME}/audio/ audio
 chmod +v bench-all.sh
+
 ./bench-all.sh > ~/scaleway-L4-1-24G-bench-all.txt 2>&1
 ./bench-all.sh > ~/scaleway-L40S-1-48G-bench-all.txt 2>&1
 
 source ~/build_libs/vulkan/1.4.313.0/setup-env.sh 
 ~/build_libs/openvino/2024.6.0/setupvars.sh 
-cmake -B build -DGGML_CUDA=ON -DGGML_VULKAN=ON
+cmake -B build
 cmake --build build -j 4 --config Release
 
  >> ~/scaleway-L4-2-24G.txt 2>&1
  
- 
+git submodule update --init --recursive
+git submodule update --recursive --remote
+
+git clone https://github.com/ggml-org/whisper.cpp.git live
+cd live
+git remote add upstream https://github.com/WhisperBooks/whisper.cpp.git
+git fetch upstream
+git merge upstream/v175-merge
+
+cuda -Wno-deprecated-gpu-targets
