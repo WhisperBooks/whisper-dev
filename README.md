@@ -37,11 +37,11 @@ copy v175-merge-01/ggml/src/ggml-flat.h   live/ggml/src/
 copy v175-merge-01/src/whisper-flat.cpp   live/src/
 copy v175-merge-01/src/whisper-flat.h     live/src/
 
-winmergeu live/CMakeLists.txt          v175-merge-01/CMakeLists.txt
 winmergeu live/examples/CMakeLists.txt v175-merge-01/examples/CMakeLists.txt
+winmergeu live/CMakeLists.txt          v175-merge-01/CMakeLists.txt
 winmergeu live/ggml/CMakeLists.txt     v175-merge-01/ggml/CMakeLists.txt
-winmergeu live/ggml/src/CMakeLists.txt v175-merge-01/ggml/src/CMakeLists.txt
 winmergeu live/src/CMakeLists.txt      v175-merge-01/src/CMakeLists.txt
+winmergeu live/ggml/src/CMakeLists.txt v175-merge-01/ggml/src/CMakeLists.txt
 
 winmergeu live/ggml/src/ggml-backend-reg.cpp v175-merge-01/ggml/src/ggml-backend-reg.cpp
 winmergeu live/include/whisper.h             v175-merge-01/include/whisper.h
