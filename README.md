@@ -50,7 +50,16 @@ winmergeu live/src/whisper.cpp               v175-merge-01/src/whisper.cpp
 
 Submodule Add
 ```
+Remove whisper.cpp section from .gitmodule
 git rm --cached whisper.cpp
 wipe .git/modules/whisper.cpp
 git submodule add -b v176 https://github.com/WhisperBooks/whisper.cpp whisper.cpp
 ```
+
+Tidy Remote
+```
+git branch -a
+e.g.
+git branch -r -d origin/whisper_load_backends
+```
+
