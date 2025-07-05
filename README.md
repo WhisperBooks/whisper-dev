@@ -15,9 +15,9 @@ git submodule update --recursive --remote
 
 Finally
 ```
-cmake -B build -DCMAKE_TOOLCHAIN_FILE="D:/git/vcpkg/scripts/buildsystems/vcpkg.cmake"
-cmake --build build -j
+cmake -B build -DCMAKE_TOOLCHAIN_FILE="D:/git/vcpkg/scripts/buildsystems/vcpkg.cmake" # -DCUDA_ALL=ON
 cmake --build build -j --config Release
+cmake --build build -j
 ```
 
 Install (broken) Release
