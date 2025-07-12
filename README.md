@@ -1,12 +1,12 @@
 On first use make sure you run...
 
 ```
-git submodule update --init --recursive
+git submodule update --init --recursive --remote
 ```
 
 
 
-Then to sync to latest branch...
+After init to sync to latest branch...
 
 ```
 git submodule update --recursive --remote
