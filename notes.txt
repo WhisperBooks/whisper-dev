@@ -68,7 +68,7 @@ cmake -B build-dl -DCMAKE_TOOLCHAIN_FILE=D:\git\vcpkg\scripts\buildsystems\vcpkg
 C:\lib\kompute\build
 
 Ubu
-sudo apt-get install cmake nvidia-cuda-toolkit libvulkan-dev libsdl2-dev glslc build-essential git libgl1-mesa-dev ffmpeg libopenblas-openmp-dev libopenmpi-dev
+sudo apt-get install cmake libvulkan-dev libsdl2-dev glslc build-essential git libgl1-mesa-dev ffmpeg libopenblas-openmp-dev libopenmpi-dev
 cmake -B build-dl -DGGML_CUDA=1 -DGGML_VULKAN=1 -DWHISPER_SDL2=ON -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DGGML_OPENMP=ON -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON
 
 WinVINO
@@ -262,6 +262,7 @@ Aladdin = 5379 words (16M mp3 35m 06s)
 | PC (Hybrid Mode) 32G  8C/16T/4070M |   202.850 | 1591.027 wpm |
 | Mac Mini M2      16G  8C/10G/16N   |   223.157 | 1446.246 wpm |
 | Mac Mini M1       8G  8C/ 8G/16N   |   357.103 |  903.772 wpm |
+| ROG Ally         16G AMD Z1 Extreme |   423.571 |  761.950 wpm |
 | PC (Perf VINO)   32G  8C/16T/NOGPU |  3202.817 |          wpm |
 | PC (Perf BLAS)   32G  8C/16T/NOGPU |           |          wpm |
 | PC (Perf CPU)    32G  8C/16T/NOGPU |  1803.965 |  178.906 wpm |
@@ -639,10 +640,9 @@ whisper_print_timings:   batchd time = 775283.12 ms / 36027 runs (    21.52 ms p
 whisper_print_timings:   prompt time =  85695.55 ms / 19521 runs (     4.39 ms per run)
 whisper_print_timings:    total time =   1386.908 s
 
-sudo apt-get install cmake libsdl2-dev glslc build-essential git libgl1-mesa-dev ffmpeg libopenblas-openmp-dev libopenmpi-dev libtbb-dev
+sudo apt-get install cmake libsdl2-dev glslc build-essential git libgl1-mesa-dev ffmpeg libopenblas-openmp-dev libopenmpi-dev libtbb-dev ocl-icd-opencl-dev libvulkan1
 wget https://peardox.com/data/data.tgz
 wget https://peardox.com/data/build_libs.tgz
-wget https://peardox.com/data/scaleway-L4.tgz
 
 wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-ubuntu2404.pin
 sudo mv cuda-ubuntu2404.pin /etc/apt/preferences.d/cuda-repository-pin-600
@@ -682,3 +682,102 @@ git fetch upstream
 git merge upstream/v175-merge
 
 cuda -Wno-deprecated-gpu-targets
+
+Ally - Z1 Extreme
+
+Vulkan / Linux
+
+whisper_print_timings:     load time =   594.62 ms
+whisper_print_timings:     fallbacks =   0 p /   0 h
+whisper_print_timings:      mel time =  1454.95 ms
+whisper_print_timings:   sample time = 35009.99 ms / 37054 runs (     0.94 ms per run)
+whisper_print_timings:   encode time = 76706.58 ms /    80 runs (   958.83 ms per run)
+whisper_print_timings:   decode time =  2039.14 ms /    96 runs (    21.24 ms per run)
+whisper_print_timings:   batchd time = 289196.59 ms / 36559 runs (     7.91 ms per run)
+whisper_print_timings:   prompt time = 15786.57 ms / 17537 runs (     0.90 ms per run)
+whisper_print_timings:    total time = 423571.25 ms
+
+423.571 = 761.950 wpm / 4.974x
+
+Vulkan / Win
+
+whisper_print_timings:     load time =  1642.66 ms
+whisper_print_timings:     fallbacks =   0 p /   0 h
+whisper_print_timings:      mel time =   850.62 ms
+whisper_print_timings:   sample time = 18196.08 ms / 36851 runs (     0.49 ms per run)
+whisper_print_timings:   encode time = 78920.36 ms /    80 runs (   986.50 ms per run)
+whisper_print_timings:   decode time =  3263.67 ms /   165 runs (    19.78 ms per run)
+whisper_print_timings:   batchd time = 351607.84 ms / 36287 runs (     9.69 ms per run)
+whisper_print_timings:   prompt time = 18480.54 ms / 17537 runs (     1.05 ms per run)
+whisper_print_timings:    total time = 474651.44 ms
+
+474.651 = 
+
+IdeaPad - GTX 1650
+
+Vulkan / Win
+
+30w
+
+whisper_print_timings:     load time =  2804.74 ms
+whisper_print_timings:     fallbacks =   0 p /   0 h
+whisper_print_timings:      mel time =  2398.38 ms
+whisper_print_timings:   sample time = 60470.27 ms / 36940 runs (     1.64 ms per run)
+whisper_print_timings:   encode time = 79739.05 ms /    80 runs (   996.74 ms per run)
+whisper_print_timings:   decode time =   475.91 ms /    28 runs (    17.00 ms per run)
+whisper_print_timings:   batchd time = 222986.78 ms / 36513 runs (     6.11 ms per run)
+whisper_print_timings:   prompt time = 19769.46 ms / 17537 runs (     1.13 ms per run)
+whisper_print_timings:    total time = 392653.53 ms
+
+392.654 =
+
+45w
+
+whisper_print_timings:     load time =  1827.35 ms
+whisper_print_timings:     fallbacks =   0 p /   0 h
+whisper_print_timings:      mel time =  1353.90 ms
+whisper_print_timings:   sample time = 20204.21 ms / 36940 runs (     0.55 ms per run)
+whisper_print_timings:   encode time = 79396.88 ms /    80 runs (   992.46 ms per run)
+whisper_print_timings:   decode time =   408.78 ms /    28 runs (    14.60 ms per run)
+whisper_print_timings:   batchd time = 202251.69 ms / 36513 runs (     5.54 ms per run)
+whisper_print_timings:   prompt time = 19239.77 ms / 17537 runs (     1.10 ms per run)
+whisper_print_timings:    total time = 326919.91 ms
+
+326.912 = 
+
+Cuda / Win
+
+30w
+
+whisper_print_timings:     load time =  1703.80 ms
+whisper_print_timings:     fallbacks =   0 p /   0 h
+whisper_print_timings:      mel time =  2389.23 ms
+whisper_print_timings:   sample time = 37057.61 ms / 37718 runs (     0.98 ms per run)
+whisper_print_timings:   encode time = 317876.88 ms /    80 runs (  3973.46 ms per run)
+whisper_print_timings:   decode time =  4107.49 ms /   109 runs (    37.68 ms per run)
+whisper_print_timings:   batchd time = 385139.38 ms / 37210 runs (    10.35 ms per run)
+whisper_print_timings:   prompt time = 63862.51 ms / 17537 runs (     3.64 ms per run)
+whisper_print_timings:    total time = 814156.25 ms
+
+814.156 = 
+
+Vulkan / Linux
+Cuda / Linux
+
+Windows / Linux x64
+cmake -B build -DGGML_CPU_ALL_VARIANTS=ON -DGGML_BACKEND_DL=ON -DBUILD_SHARED_LIBS=ON
+Mac / Linux ARM
+cmake -B build -DGGML_CPU_ARM_ARCH=OFF -DGGML_NATIVE=OFF -DGGML_CPU_ALL_VARIANTS=ON -DGGML_BACKEND_DL=ON -DBUILD_SHARED_LIBS=ON
+
+Ampere Altra / Pi5
+
+Sycl (need ggml src)
+"C:\Program Files (x86)\Intel\oneAPI\setvars.bat"
+
+cmake -G "Ninja"  -B build -DGGML_SYCL=ON -DCMAKE_BUILD_TYPE=Release -DDNNL_GPU_VENDOR=NVIDIA -DGGML_SYCL_TARGET=NVIDIA -DCMAKE_INSTALL_PREFIX=built
+cmake --build build
+
+-DDNNL_GPU_VENDOR=NVIDIA -DGGML_SYCL_TARGET=NVIDIA
+
+cmake -G "Ninja"  -B build -DSDL2_DIR=C:/build_lib/sdl2/cmake
+ > ~/perf-l40s.log 2>&1
