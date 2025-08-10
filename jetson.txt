@@ -72,3 +72,7 @@ whisper_print_timings:   decode time =  4902.16 ms /    36 runs (   136.17 ms pe
 whisper_print_timings:   batchd time = 137211.84 ms /  5216 runs (    26.31 ms per run)
 whisper_print_timings:   prompt time =   141.22 ms /    22 runs (     6.42 ms per run)
 whisper_print_timings:    total time = 169437.05 ms
+
+
+git submodule update --init --recursive
+git submodule update --recursive --remote
