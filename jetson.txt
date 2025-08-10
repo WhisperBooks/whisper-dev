@@ -5,7 +5,7 @@ Install cmake from Kitware + set path
 
 mkdir src
 
-Vulkan (Not working yet)
+Vulkan 
 ====================================
 mkdir ~/build_libs
 mkdir ~/build_libs/vulkan
@@ -14,18 +14,6 @@ wget https://github.com/jakoch/vulkan-sdk-arm/releases/download/1.4.321.1/vulkan
 tar xJf vulkansdk-ubuntu-22.04-arm-1.4.321.1.tar.xz
 rm vulkansdk-ubuntu-22.04-arm-1.4.321.1.tar.xz
 source ~/build_libs/vulkan/1.4.321.1/setup-env.sh
-
-sudo apt-get install ninja-build
-cd ~/src
-git clone https://github.com/google/shaderc.git
-cd sharderc
-./utils/git-sync-deps
-mkdir build
-cd build
-cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
-ninja
-ctest
-sudo cmake --install .
 ====================================
 
 Whisper-dev
