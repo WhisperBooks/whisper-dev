@@ -1,0 +1,86 @@
+Linux ARM64 Jetson
+sudo apt-get install libsdl2-dev build-essential git libgl1-mesa-dev ffmpeg libopenblas-openmp-dev libopenmpi-dev libtbb-dev ocl-icd-opencl-dev nano
+
+Install cmake from Kitware + set path
+
+mkdir src
+
+Vulkan (Not working yet)
+====================================
+mkdir ~/build_libs
+mkdir ~/build_libs/vulkan
+cd ~/build_libs/vulkan
+wget https://github.com/jakoch/vulkan-sdk-arm/releases/download/1.4.321.1/vulkansdk-ubuntu-22.04-arm-1.4.321.1.tar.xz
+tar xJf vulkansdk-ubuntu-22.04-arm-1.4.321.1.tar.xz
+rm vulkansdk-ubuntu-22.04-arm-1.4.321.1.tar.xz
+source ~/build_libs/vulkan/1.4.321.1/setup-env.sh
+
+sudo apt-get install ninja-build
+cd ~/src
+git clone https://github.com/google/shaderc.git
+cd sharderc
+./utils/git-sync-deps
+mkdir build
+cd build
+cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
+ninja
+ctest
+sudo cmake --install .
+====================================
+
+Whisper-dev
+====================================
+cd ~/src
+git clone https://github.com/WhisperBooks/whisper-dev.git
+cd ~/src/whisper-dev
+cmake -B build -DGGML_CPU_ARM_ARCH=OFF -DGGML_NATIVE=OFF -DGGML_CPU_ALL_VARIANTS=ON -DGGML_BACKEND_DL=ON -DBUILD_SHARED_LIBS=ON
+cmake --build build -j4 --config Release
+====================================
+
+
+MaxN
+Jetson Orin Nano Super - System throttled due to Over-current.
+whisper_print_timings:     load time =  1106.09 ms
+whisper_print_timings:     fallbacks =   1 p /   0 h
+whisper_print_timings:      mel time =  1863.23 ms
+whisper_print_timings:   sample time = 35897.09 ms / 26424 runs (     1.36 ms per run)
+whisper_print_timings:   encode time = 80357.62 ms /    71 runs (  1131.80 ms per run)
+whisper_print_timings:   decode time = 26718.19 ms /   716 runs (    37.32 ms per run)
+whisper_print_timings:   batchd time = 252978.30 ms / 25350 runs (     9.98 ms per run)
+whisper_print_timings:   prompt time = 14428.82 ms / 15878 runs (     0.91 ms per run)
+whisper_print_timings:    total time = 420470.75 ms
+
+= x5.010, 767.568wpm
+
+25W
+whisper_print_timings:     load time =  1374.35 ms
+whisper_print_timings:     fallbacks =   4 p /   0 h
+whisper_print_timings:      mel time =    83.34 ms
+whisper_print_timings:   sample time =  6588.85 ms /  5275 runs (     1.25 ms per run)
+whisper_print_timings:   encode time =  3855.44 ms /     3 runs (  1285.15 ms per run)
+whisper_print_timings:   decode time =  1477.38 ms /    36 runs (    41.04 ms per run)
+whisper_print_timings:   batchd time = 45364.96 ms /  5216 runs (     8.70 ms per run)
+whisper_print_timings:   prompt time =    45.15 ms /    22 runs (     2.05 ms per run)
+whisper_print_timings:    total time = 59185.71 ms
+
+15W
+whisper_print_timings:     load time =  2254.23 ms
+whisper_print_timings:     fallbacks =   4 p /   0 h
+whisper_print_timings:      mel time =    74.44 ms
+whisper_print_timings:   sample time =  6605.45 ms /  5275 runs (     1.25 ms per run)
+whisper_print_timings:   encode time =  5583.25 ms /     3 runs (  1861.08 ms per run)
+whisper_print_timings:   decode time =  2031.57 ms /    36 runs (    56.43 ms per run)
+whisper_print_timings:   batchd time = 66848.59 ms /  5216 runs (    12.82 ms per run)
+whisper_print_timings:   prompt time =    71.64 ms /    22 runs (     3.26 ms per run)
+whisper_print_timings:    total time = 83888.27 ms
+
+7W
+whisper_print_timings:     load time =  2553.76 ms
+whisper_print_timings:     fallbacks =   4 p /   0 h
+whisper_print_timings:      mel time =   129.41 ms
+whisper_print_timings:   sample time =  8976.78 ms /  5275 runs (     1.70 ms per run)
+whisper_print_timings:   encode time = 14956.05 ms /     3 runs (  4985.35 ms per run)
+whisper_print_timings:   decode time =  4902.16 ms /    36 runs (   136.17 ms per run)
+whisper_print_timings:   batchd time = 137211.84 ms /  5216 runs (    26.31 ms per run)
+whisper_print_timings:   prompt time =   141.22 ms /    22 runs (     6.42 ms per run)
+whisper_print_timings:    total time = 169437.05 ms

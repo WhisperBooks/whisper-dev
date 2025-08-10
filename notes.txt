@@ -651,6 +651,28 @@ sudo dpkg -i cuda-12.9.0.deb
 sudo cp /var/cuda-repo-ubuntu2404-12-9-local/cuda-*-keyring.gpg /usr/share/keyrings/
 sudo apt-get update
 sudo apt-get -y install cuda-toolkit-12-9
+rm -f cuda-12.9.0.deb
+tar -zxvf build_libs.tgz
+rm -f build_libs.tgz
+tar -zxvf data.tgz
+rm -f data.tgz
+
+mkdir src
+cd src
+git clone https://github.com/WhisperBooks/whisper-dev.git
+cd whisper-dev
+git submodule update --init --recursive
+git submodule update --recursive --remote
+
+source ~/build_libs/vulkan/1.4.313.0/setup-env.sh 
+~/build_libs/openvino/2024.6.0/setupvars.sh 
+cmake -B build
+cmake --build build -j --config Release
+
+nvidia-smi dmon -s p
+nvidia-smi --query-gpu=gpu_name,vbios_version,memory.total,memory.used,memory.free --format=csv,nounits,noheader
+ 
+~/src/whisper-dev/build/bin/whisper-cli2 -m ~/models/ggml-medium.en.bin -f ~/audio/aladdin.mp3 -ng -nt -vk
 
 echo $LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=${HOME}/build_libs/openvino/2024.6.0/runtime/lib/intel64/:${HOME}/build_libs/openvino/2024.6.0/runtime/3rdparty/tbb/lib/:${HOME}/whisp/built/lib/
@@ -665,15 +687,8 @@ chmod +v bench-all.sh
 ./bench-all.sh > ~/scaleway-L4-1-24G-bench-all.txt 2>&1
 ./bench-all.sh > ~/scaleway-L40S-1-48G-bench-all.txt 2>&1
 
-source ~/build_libs/vulkan/1.4.313.0/setup-env.sh 
-~/build_libs/openvino/2024.6.0/setupvars.sh 
-cmake -B build
-cmake --build build -j 4 --config Release
-
  >> ~/scaleway-L4-2-24G.txt 2>&1
  
-git submodule update --init --recursive
-git submodule update --recursive --remote
 
 git clone https://github.com/ggml-org/whisper.cpp.git live
 cd live
@@ -768,16 +783,3 @@ Windows / Linux x64
 cmake -B build -DGGML_CPU_ALL_VARIANTS=ON -DGGML_BACKEND_DL=ON -DBUILD_SHARED_LIBS=ON
 Mac / Linux ARM
 cmake -B build -DGGML_CPU_ARM_ARCH=OFF -DGGML_NATIVE=OFF -DGGML_CPU_ALL_VARIANTS=ON -DGGML_BACKEND_DL=ON -DBUILD_SHARED_LIBS=ON
-
-Ampere Altra / Pi5
-
-Sycl (need ggml src)
-"C:\Program Files (x86)\Intel\oneAPI\setvars.bat"
-
-cmake -G "Ninja"  -B build -DGGML_SYCL=ON -DCMAKE_BUILD_TYPE=Release -DDNNL_GPU_VENDOR=NVIDIA -DGGML_SYCL_TARGET=NVIDIA -DCMAKE_INSTALL_PREFIX=built
-cmake --build build
-
--DDNNL_GPU_VENDOR=NVIDIA -DGGML_SYCL_TARGET=NVIDIA
-
-cmake -G "Ninja"  -B build -DSDL2_DIR=C:/build_lib/sdl2/cmake
- > ~/perf-l40s.log 2>&1
