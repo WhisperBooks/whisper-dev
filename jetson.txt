@@ -1,4 +1,5 @@
 Linux ARM64 Jetson
+https://pibenchmarks.com/benchmark/125657/
 sudo apt-get install libsdl2-dev build-essential git libgl1-mesa-dev ffmpeg libopenblas-openmp-dev libopenmpi-dev libtbb-dev ocl-icd-opencl-dev nano
 
 Install cmake from Kitware + set path
@@ -13,7 +14,6 @@ cd ~/build_libs/vulkan
 wget https://github.com/jakoch/vulkan-sdk-arm/releases/download/1.4.321.1/vulkansdk-ubuntu-22.04-arm-1.4.321.1.tar.xz
 tar xJf vulkansdk-ubuntu-22.04-arm-1.4.321.1.tar.xz
 rm vulkansdk-ubuntu-22.04-arm-1.4.321.1.tar.xz
-source ~/build_libs/vulkan/1.4.321.1/setup-env.sh
 ====================================
 
 Whisper-dev
@@ -21,57 +21,100 @@ Whisper-dev
 cd ~/src
 git clone https://github.com/WhisperBooks/whisper-dev.git
 cd ~/src/whisper-dev
+source ~/build_libs/vulkan/1.4.321.1/setup-env.sh
 cmake -B build -DGGML_CPU_ARM_ARCH=OFF -DGGML_NATIVE=OFF -DGGML_CPU_ALL_VARIANTS=ON -DGGML_BACKEND_DL=ON -DBUILD_SHARED_LIBS=ON
 cmake --build build -j4 --config Release
 ====================================
 
+Aladdin - Jetson Orin Nano Super
+MaxN - System throttled due to Over-current.
+fallbacks   =   0p,   0h
+mel_time    =   1873.52 ms
+sample_time =  48297.57 ms :  37273 runs (     1.30 per run)
+encode_time =  90920.90 ms :     80 runs (  1136.51 per run)
+decode_time =   2213.78 ms :     58 runs (    38.17 per run)
+batchd_time = 271364.09 ms :  36816 runs (     7.37 per run)
+prompt_time =  15980.47 ms :  17538 runs (     0.91 per run)
+total time  =   428.777 secs
+tokens per second =    16.346 (  7009)
 
-MaxN
-Jetson Orin Nano Super - System throttled due to Over-current.
-whisper_print_timings:     load time =  1106.09 ms
-whisper_print_timings:     fallbacks =   1 p /   0 h
-whisper_print_timings:      mel time =  1863.23 ms
-whisper_print_timings:   sample time = 35897.09 ms / 26424 runs (     1.36 ms per run)
-whisper_print_timings:   encode time = 80357.62 ms /    71 runs (  1131.80 ms per run)
-whisper_print_timings:   decode time = 26718.19 ms /   716 runs (    37.32 ms per run)
-whisper_print_timings:   batchd time = 252978.30 ms / 25350 runs (     9.98 ms per run)
-whisper_print_timings:   prompt time = 14428.82 ms / 15878 runs (     0.91 ms per run)
-whisper_print_timings:    total time = 420470.75 ms
-
-= x5.010, 767.568wpm
-
-25W
-whisper_print_timings:     load time =  1374.35 ms
-whisper_print_timings:     fallbacks =   4 p /   0 h
-whisper_print_timings:      mel time =    83.34 ms
-whisper_print_timings:   sample time =  6588.85 ms /  5275 runs (     1.25 ms per run)
-whisper_print_timings:   encode time =  3855.44 ms /     3 runs (  1285.15 ms per run)
-whisper_print_timings:   decode time =  1477.38 ms /    36 runs (    41.04 ms per run)
-whisper_print_timings:   batchd time = 45364.96 ms /  5216 runs (     8.70 ms per run)
-whisper_print_timings:   prompt time =    45.15 ms /    22 runs (     2.05 ms per run)
-whisper_print_timings:    total time = 59185.71 ms
+25W - System throttled due to Over-current.
+fallbacks   =   0p,   0h
+mel_time    =   2381.59 ms
+sample_time =  47670.87 ms :  37273 runs (     1.28 per run)
+encode_time =  97710.73 ms :     80 runs (  1221.38 per run)
+decode_time =   2339.69 ms :     58 runs (    40.34 per run)
+batchd_time = 293960.28 ms :  36816 runs (     7.98 per run)
+prompt_time =  17383.60 ms :  17538 runs (     0.99 per run)
+total time  =   459.065 secs
+tokens per second =    15.268 (  7009)
 
 15W
-whisper_print_timings:     load time =  2254.23 ms
-whisper_print_timings:     fallbacks =   4 p /   0 h
-whisper_print_timings:      mel time =    74.44 ms
-whisper_print_timings:   sample time =  6605.45 ms /  5275 runs (     1.25 ms per run)
-whisper_print_timings:   encode time =  5583.25 ms /     3 runs (  1861.08 ms per run)
-whisper_print_timings:   decode time =  2031.57 ms /    36 runs (    56.43 ms per run)
-whisper_print_timings:   batchd time = 66848.59 ms /  5216 runs (    12.82 ms per run)
-whisper_print_timings:   prompt time =    71.64 ms /    22 runs (     3.26 ms per run)
-whisper_print_timings:    total time = 83888.27 ms
+fallbacks   =   0p,   0h
+mel_time    =   2139.80 ms
+sample_time =  51477.49 ms :  37273 runs (     1.38 per run)
+encode_time = 144203.44 ms :     80 runs (  1802.54 per run)
+decode_time =   3437.47 ms :     58 runs (    59.27 per run)
+batchd_time = 431960.69 ms :  36816 runs (    11.73 per run)
+prompt_time =  25550.35 ms :  17538 runs (     1.46 per run)
+total time  =   656.629 secs
+tokens per second =    10.674 (  7009)
 
 7W
-whisper_print_timings:     load time =  2553.76 ms
-whisper_print_timings:     fallbacks =   4 p /   0 h
-whisper_print_timings:      mel time =   129.41 ms
-whisper_print_timings:   sample time =  8976.78 ms /  5275 runs (     1.70 ms per run)
-whisper_print_timings:   encode time = 14956.05 ms /     3 runs (  4985.35 ms per run)
-whisper_print_timings:   decode time =  4902.16 ms /    36 runs (   136.17 ms per run)
-whisper_print_timings:   batchd time = 137211.84 ms /  5216 runs (    26.31 ms per run)
-whisper_print_timings:   prompt time =   141.22 ms /    22 runs (     6.42 ms per run)
-whisper_print_timings:    total time = 169437.05 ms
+fallbacks   =   0p,   0h
+mel_time    =   3465.22 ms
+sample_time =  55933.43 ms :  37128 runs (     1.51 per run)
+encode_time = 388381.47 ms :     79 runs (  4916.22 per run)
+decode_time =   6231.69 ms :     43 runs (   144.92 per run)
+batchd_time = 895324.00 ms :  36691 runs (    24.40 per run)
+prompt_time =  66366.35 ms :  17311 runs (     3.83 per run)
+total time  =  1412.237 secs
+tokens per second =     4.969 (  7018)
+
+World Record - Jetson Orin Nano Super
+MaxN - System throttled due to Over-current.
+fallbacks   =   0p,   0h
+mel_time    =     66.68 ms
+sample_time =   3169.68 ms :   2480 runs (     1.28 per run)
+encode_time =   3577.13 ms :      3 runs (  1192.38 per run)
+decode_time =    619.82 ms :     16 runs (    38.74 per run)
+batchd_time =  18632.95 ms :   2460 runs (     7.57 per run)
+prompt_time =    405.79 ms :    440 runs (     0.92 per run)
+total time  =    26.405 secs
+tokens per second =    17.534 (   463)
+
+25W - System throttled due to Over-current.
+fallbacks   =   0p,   0h
+mel_time    =     74.28 ms
+sample_time =   3134.85 ms :   2480 runs (     1.26 per run)
+encode_time =   3841.36 ms :      3 runs (  1280.45 per run)
+decode_time =    669.39 ms :     16 runs (    41.84 per run)
+batchd_time =  20129.45 ms :   2460 runs (     8.18 per run)
+prompt_time =    450.40 ms :    440 runs (     1.02 per run)
+total time  =    28.225 secs
+tokens per second =    16.404 (   463)
+
+15W
+fallbacks   =   0p,   0h
+mel_time    =     71.93 ms
+sample_time =   3295.24 ms :   2480 runs (     1.33 per run)
+encode_time =   5511.10 ms :      3 runs (  1837.03 per run)
+decode_time =    968.87 ms :     16 runs (    60.55 per run)
+batchd_time =  29531.22 ms :   2460 runs (    12.00 per run)
+prompt_time =    658.06 ms :    440 runs (     1.50 per run)
+total time  =    39.964 secs
+tokens per second =    11.585 (   463)
+
+7W
+fallbacks   =   0p,   0h
+mel_time    =    100.33 ms
+sample_time =   3630.10 ms :   2497 runs (     1.45 per run)
+encode_time =  14924.84 ms :      3 runs (  4974.95 per run)
+decode_time =    310.07 ms :      2 runs (   155.03 per run)
+batchd_time =  64339.75 ms :   2491 runs (    25.83 per run)
+prompt_time =   1700.99 ms :    440 runs (     3.87 per run)
+total time  =    84.906 secs
+tokens per second =     5.465 (   464)
 
 
 git submodule update --init --recursive
