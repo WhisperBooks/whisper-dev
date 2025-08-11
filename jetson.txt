@@ -28,15 +28,27 @@ cmake --build build -j4 --config Release
 
 Aladdin - Jetson Orin Nano Super
 MaxN - System throttled due to Over-current.
+CUDA
 fallbacks   =   0p,   0h
-mel_time    =   1873.52 ms
-sample_time =  48297.57 ms :  37273 runs (     1.30 per run)
-encode_time =  90920.90 ms :     80 runs (  1136.51 per run)
-decode_time =   2213.78 ms :     58 runs (    38.17 per run)
-batchd_time = 271364.09 ms :  36816 runs (     7.37 per run)
-prompt_time =  15980.47 ms :  17538 runs (     0.91 per run)
-total time  =   428.777 secs
-tokens per second =    16.346 (  7009)
+mel_time    =   1865.46 ms
+sample_time =  47714.06 ms :  37273 runs (     1.28 per run)
+encode_time =  90283.20 ms :     80 runs (  1128.54 per run)
+decode_time =   2161.48 ms :     58 runs (    37.27 per run)
+batchd_time = 269811.38 ms :  36816 runs (     7.33 per run)
+prompt_time =  15893.33 ms :  17538 runs (     0.91 per run)
+tokens per second =    16.458 (  7009)
+total time  =   425.863 secs / 0:07:05.863
+
+Vulkan
+fallbacks   =   0p,   0h
+mel_time    =   1871.69 ms
+sample_time =  46759.71 ms :  37065 runs (     1.26 per run)
+encode_time = 150964.47 ms :     79 runs (  1910.94 per run)
+decode_time =   1940.67 ms :     51 runs (    38.05 per run)
+batchd_time = 405076.91 ms :  36620 runs (    11.06 per run)
+prompt_time =  30089.32 ms :  17311 runs (     1.74 per run)
+tokens per second =    11.033 (  7004)
+total time  =   634.831 secs / 0:10:34.831
 
 25W - System throttled due to Over-current.
 fallbacks   =   0p,   0h

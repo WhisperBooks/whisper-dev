@@ -1,0 +1,24 @@
+Vulkan
+fallbacks   =   0p,   0h
+mel_time    =   1257.13 ms 
+sample_time =  11337.89 ms :  37145 runs (     0.31 per run)
+encode_time =  11009.11 ms :     80 runs (   137.61 per run)
+decode_time =    481.01 ms :     62 runs (     7.76 per run)
+batchd_time =  67225.93 ms :  36684 runs (     1.83 per run)
+prompt_time =   2601.97 ms :  17537 runs (     0.15 per run)
+tokens per second =    75.807 (  7024)
+
+total time  =    92.656 secs / 0:01:32.656
+
+CUDA
+fallbacks   =   0p,   0h
+mel_time    =   1266.63 ms 
+sample_time =   9137.39 ms :  36866 runs (     0.25 per run)
+encode_time =  14554.59 ms :     81 runs (   179.69 per run)
+decode_time =    434.60 ms :     59 runs (     7.37 per run)
+batchd_time =  61291.28 ms :  36403 runs (     1.68 per run)
+prompt_time =   2543.19 ms :  17764 runs (     0.14 per run)
+tokens per second =    79.626 (  7004)
+
+total time  =    87.961 secs / 0:01:27.961
+
