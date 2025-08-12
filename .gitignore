@@ -3,3 +3,5 @@ build*/
 built/
 built*/
 4070*
+audio/*
+models/*
