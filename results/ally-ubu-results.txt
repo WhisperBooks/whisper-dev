@@ -1,0 +1,38 @@
+All Vulkan
+World Record - Performance
+fallbacks   =   0p,   0h
+mel_time    =     43.27 ms 
+sample_time =    746.31 ms :   2195 runs (     0.34 per run)
+encode_time =   3383.22 ms :      3 runs (  1127.74 per run)
+decode_time =     36.85 ms :      2 runs (    18.42 per run)
+batchd_time =  16613.06 ms :   2180 runs (     7.62 per run)
+prompt_time =    180.07 ms :    218 runs (     0.83 per run)
+tokens per second =    19.800 (   415)
+total time  =    20.960 secs / 0:00:20.960
+
+Aladdin - 30W
+fallbacks   =   0p,   0h
+mel_time    =   1378.65 ms 
+sample_time =  30394.64 ms :  37054 runs (     0.82 per run)
+encode_time =  60870.41 ms :     80 runs (   760.88 per run)
+decode_time =   1954.25 ms :     96 runs (    20.36 per run)
+batchd_time = 302112.72 ms :  36559 runs (     8.26 per run)
+prompt_time =  12649.47 ms :  17537 runs (     0.72 per run)
+tokens per second =    17.158 (  7000)
+total time  =   407.981 secs / 0:06:47.981
+
+World Record - Balanced
+fallbacks   =   0p,   0h
+mel_time    =     44.81 ms 
+sample_time =   1733.46 ms :   2195 runs (     0.79 per run)
+encode_time =   3600.46 ms :      3 runs (  1200.15 per run)
+decode_time =     41.66 ms :      2 runs (    20.83 per run)
+batchd_time =  17693.02 ms :   2180 runs (     8.12 per run)
+prompt_time =    227.14 ms :    218 runs (     1.04 per run)
+tokens per second =    17.814 (   415)
+total time  =    23.296 secs / 0:00:23.296
+
+Aladdin - Balanced
+
+World Record - Power Saver
+Aladdin - Power Saver

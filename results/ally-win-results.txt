@@ -1,0 +1,113 @@
+All Vulkan
+World Record - 30W
+fallbacks   =   0p,   0h
+mel_time    =     27.90 ms
+sample_time =   1128.18 ms :   2195 runs (     0.51 per run)
+encode_time =   2990.04 ms :      3 runs (   996.68 per run)
+decode_time =     38.36 ms :      2 runs (    19.18 per run)
+batchd_time =  21611.90 ms :   2180 runs (     9.91 per run)
+prompt_time =    238.17 ms :    218 runs (     1.09 per run)
+tokens per second =    15.957 (   415)
+total time  =    26.007 secs / 0:00:26.007
+
+Aladdin - 30W
+fallbacks   =   0p,   0h
+mel_time    =    818.25 ms
+sample_time =  17942.16 ms :  36851 runs (     0.49 per run)
+encode_time =  79025.55 ms :     80 runs (   987.82 per run)
+decode_time =   3569.07 ms :    165 runs (    21.63 per run)
+batchd_time = 348421.72 ms :  36287 runs (     9.60 per run)
+prompt_time =  18644.62 ms :  17537 runs (     1.06 per run)
+tokens per second =    14.940 (  6986)
+total time  =   467.603 secs / 0:07:47.603
+
+World Record - 25W
+fallbacks   =   0p,   0h
+mel_time    =     27.66 ms
+sample_time =   1459.22 ms :   2195 runs (     0.66 per run)
+encode_time =   3139.15 ms :      3 runs (  1046.38 per run)
+decode_time =     39.05 ms :      2 runs (    19.52 per run)
+batchd_time =  22010.67 ms :   2180 runs (    10.10 per run)
+prompt_time =    250.06 ms :    218 runs (     1.15 per run)
+tokens per second =    15.429 (   415)
+total time  =    26.898 secs / 0:00:26.898
+
+Aladdin - 25W
+fallbacks   =   0p,   0h
+mel_time    =   1688.58 ms
+sample_time =  21950.38 ms :  36851 runs (     0.60 per run)
+encode_time =  82455.83 ms :     80 runs (  1030.70 per run)
+decode_time =   3333.05 ms :    165 runs (    20.20 per run)
+batchd_time = 351239.91 ms :  36287 runs (     9.68 per run)
+prompt_time =  19156.72 ms :  17537 runs (     1.09 per run)
+tokens per second =    14.611 (  6986)
+total time  =   478.136 secs / 0:07:58.136
+
+
+World Record - 20W
+fallbacks   =   0p,   0h
+mel_time    =     28.75 ms
+sample_time =   1414.74 ms :   2195 runs (     0.64 per run)
+encode_time =   3217.71 ms :      3 runs (  1072.57 per run)
+decode_time =     38.54 ms :      2 runs (    19.27 per run)
+batchd_time =  21907.16 ms :   2180 runs (    10.05 per run)
+prompt_time =    242.66 ms :    218 runs (     1.11 per run)
+tokens per second =    15.473 (   415)
+total time  =    26.821 secs / 0:00:26.821
+
+Aladdin - 20W
+fallbacks   =   0p,   0h
+mel_time    =   1737.08 ms
+sample_time =  26796.29 ms :  36851 runs (     0.73 per run)
+encode_time =  85987.07 ms :     80 runs (  1074.84 per run)
+decode_time =   3356.32 ms :    165 runs (    20.34 per run)
+batchd_time = 355327.69 ms :  36287 runs (     9.79 per run)
+prompt_time =  19353.72 ms :  17537 runs (     1.10 per run)
+tokens per second =    14.233 (  6986)
+total time  =   490.821 secs / 0:08:10.821
+
+World Record - 15W
+fallbacks   =   0p,   0h
+mel_time    =     29.24 ms
+sample_time =   2823.48 ms :   2195 runs (     1.29 per run)
+encode_time =   3548.92 ms :      3 runs (  1182.97 per run)
+decode_time =     42.74 ms :      2 runs (    21.37 per run)
+batchd_time =  23122.32 ms :   2180 runs (    10.61 per run)
+prompt_time =    276.03 ms :    218 runs (     1.27 per run)
+tokens per second =    13.920 (   415)
+total time  =    29.813 secs / 0:00:29.813
+
+Aladdin - 15W
+fallbacks   =   0p,   0h
+mel_time    =   1760.65 ms
+sample_time =  44434.02 ms :  36851 runs (     1.21 per run)
+encode_time = 101119.26 ms :     80 runs (  1263.99 per run)
+decode_time =   3630.38 ms :    165 runs (    22.00 per run)
+batchd_time = 378001.88 ms :  36287 runs (    10.42 per run)
+prompt_time =  22581.10 ms :  17537 runs (     1.29 per run)
+tokens per second =    12.707 (  6986)
+total time  =   549.767 secs / 0:09:09.767
+
+World Record - 10W
+fallbacks   =   0p,   0h
+mel_time    =     33.30 ms
+sample_time =   2730.84 ms :   2195 runs (     1.24 per run)
+encode_time =   3880.18 ms :      3 runs (  1293.39 per run)
+decode_time =     46.52 ms :      2 runs (    23.26 per run)
+batchd_time =  23607.82 ms :   2180 runs (    10.83 per run)
+prompt_time =    295.43 ms :    218 runs (     1.36 per run)
+tokens per second =    13.579 (   415)
+total time  =    30.561 secs / 0:00:30.561
+
+Aladdin - 10W
+fallbacks   =   0p,   0h
+mel_time    =   2069.16 ms
+sample_time =  45039.98 ms :  36851 runs (     1.22 per run)
+encode_time = 180771.08 ms :     80 runs (  2259.64 per run)
+decode_time =   4169.48 ms :    165 runs (    25.27 per run)
+batchd_time = 466475.00 ms :  36287 runs (    12.86 per run)
+prompt_time =  38861.89 ms :  17537 runs (     2.22 per run)
+tokens per second =     9.501 (  6986)
+total time  =   735.317 secs / 0:12:15.317
+
+

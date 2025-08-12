@@ -1,0 +1,94 @@
+Vulkan - World Record - Performance
+fallbacks   =   0p,   0h
+mel_time    =     43.07 ms
+sample_time =   1573.72 ms :   2195 runs (     0.72 per run)
+encode_time =   3425.02 ms :      3 runs (  1141.67 per run)
+decode_time =    332.93 ms :      2 runs (   166.46 per run)
+batchd_time =  12950.39 ms :   2180 runs (     5.94 per run)
+prompt_time =    251.51 ms :    218 runs (     1.15 per run)
+tokens per second =    22.392 (   415)
+total time  =    18.534 secs / 0:00:18.534
+
+CUDA - World Record - Performance
+fallbacks   =   0p,   0h
+mel_time    =     40.41 ms
+sample_time =    906.96 ms :   2222 runs (     0.41 per run)
+encode_time =  12025.69 ms :      3 runs (  4008.56 per run)
+decode_time =     64.06 ms :      2 runs (    32.03 per run)
+batchd_time =  22649.56 ms :   2207 runs (    10.26 per run)
+prompt_time =    820.94 ms :    218 runs (     3.77 per run)
+tokens per second =    11.462 (   418)
+total time  =    36.467 secs / 0:00:36.467
+
+Vulkan - Aladdin - Performance
+fallbacks   =   0p,   0h
+mel_time    =   1273.84 ms
+sample_time =  23380.91 ms :  36940 runs (     0.63 per run)
+encode_time =  79339.59 ms :     80 runs (   991.74 per run)
+decode_time =    414.04 ms :     28 runs (    14.79 per run)
+batchd_time = 206281.14 ms :  36513 runs (     5.65 per run)
+prompt_time =  19482.30 ms :  17537 runs (     1.11 per run)
+tokens per second =    21.320 (  7012)
+total time  =   328.898 secs / 0:05:28.898
+
+CUDA - Aladdin - Performance
+fallbacks   =   0p,   0h
+mel_time    =   1326.18 ms
+sample_time =  16261.95 ms :  37718 runs (     0.43 per run)
+encode_time = 318707.50 ms :     80 runs (  3983.84 per run)
+decode_time =   3996.36 ms :    109 runs (    36.66 per run)
+batchd_time = 375323.84 ms :  37210 runs (    10.09 per run)
+prompt_time =  63747.68 ms :  17537 runs (     3.64 per run)
+tokens per second =     9.051 (  7042)
+total time  =   778.037 secs / 0:12:58.037
+
+====================================
++++ WHISPER_BINDINGS_FLAT +++
+ggml_backend_try_load_best: (cuda)
+ggml_cuda_init: GGML_CUDA_FORCE_MMQ:    no
+ggml_cuda_init: GGML_CUDA_FORCE_CUBLAS: no
+ggml_cuda_init: found 1 CUDA devices:
+  Device 0: NVIDIA GeForce GTX 1650, compute capability 7.5, VMM: yes
+load_backend: loaded CUDA backend from C:\bench\whisper\ggml-cuda.dll
+ggml_backend_try_load_best: (cpu)
+load_backend: loaded CPU backend from C:\bench\whisper\ggml-cpu-icelake.dll
+whisper_init_from_file_with_params_no_state: loading model from '.\models\ggml-medium.en.bin'
+whisper_init_with_params_no_state: use gpu    = 1
+whisper_init_with_params_no_state: flash attn = 0
+whisper_init_with_params_no_state: gpu_device = 0
+whisper_init_with_params_no_state: dtw        = 0
+whisper_init_with_params_no_state: devices    = 2
+whisper_init_with_params_no_state: backends   = 2
+whisper_model_load: loading model
+whisper_model_load: n_vocab       = 51864
+whisper_model_load: n_audio_ctx   = 1500
+whisper_model_load: n_audio_state = 1024
+whisper_model_load: n_audio_head  = 16
+whisper_model_load: n_audio_layer = 24
+whisper_model_load: n_text_ctx    = 448
+whisper_model_load: n_text_state  = 1024
+whisper_model_load: n_text_head   = 16
+whisper_model_load: n_text_layer  = 24
+whisper_model_load: n_mels        = 80
+whisper_model_load: ftype         = 1
+whisper_model_load: qntvr         = 0
+whisper_model_load: type          = 4 (medium)
+whisper_model_load: adding 1607 extra tokens
+whisper_model_load: n_langs       = 99
+whisper_model_load:        CUDA0 total size =  1533.14 MB
+whisper_model_load: model size    = 1533.14 MB
+whisper_backend_init_gpu: using CUDA0 backend
+whisper_init_state: kv self size  =   50.33 MB
+whisper_init_state: kv cross size =  150.99 MB
+whisper_init_state: kv pad  size  =    6.29 MB
+whisper_init_state: compute buffer (conv)   =   29.53 MB
+whisper_init_state: compute buffer (encode) =  170.17 MB
+whisper_init_state: compute buffer (cross)  =    7.73 MB
+whisper_init_state: compute buffer (decode) =   99.12 MB
+
+system_info: n_threads = 4 / 8 | WHISPER : COREML = 0 | OPENVINO = 1 | CUDA : ARCHS = 500,750,860,890,1200 | PEER_MAX_BATCH_SIZE = 128 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | AVX512 = 1 | AVX512_VBMI = 1 | AVX512_VNNI = 1 | OPENMP = 1 | REPACK = 1 |
+
+main: processing '.\audio\aladdin.mp3' (33707154 samples, 2106.7 sec), 4 threads, 1 processors, 5 beams + best of 5, lang = en, task = transcribe, timestamps = 1 ...
+
+
+

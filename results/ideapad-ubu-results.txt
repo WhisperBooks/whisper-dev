@@ -1,0 +1,96 @@
+Vulkan - World Record - Performance
+fallbacks   =   0p,   0h
+mel_time    =     55.23 ms 
+sample_time =    808.34 ms :   2195 runs (     0.37 per run)
+encode_time =   2978.59 ms :      3 runs (   992.86 per run)
+decode_time =     25.90 ms :      2 runs (    12.95 per run)
+batchd_time =  12354.21 ms :   2180 runs (     5.67 per run)
+prompt_time =    253.81 ms :    218 runs (     1.16 per run)
+tokens per second =    25.273 (   415)
+total time  =    16.421 secs / 0:00:16.421
+
+CUDA - World Record - Performance
+fallbacks   =   0p,   0h
+mel_time    =     52.54 ms 
+sample_time =    900.99 ms :   2378 runs (     0.38 per run)
+encode_time =  11963.48 ms :      3 runs (  3987.83 per run)
+decode_time =     32.17 ms :      1 runs (    32.17 per run)
+batchd_time =  23096.16 ms :   2373 runs (     9.73 per run)
+prompt_time =   1639.45 ms :    440 runs (     3.73 per run)
+tokens per second =    11.798 (   444)
+total time  =    37.632 secs / 0:00:37.632
+
+
+Vulkan - Aladdin - Performance
+fallbacks   =   0p,   0h
+mel_time    =   1643.69 ms 
+sample_time =  14108.05 ms :  37090 runs (     0.38 per run)
+encode_time =  80125.75 ms :     80 runs (  1001.57 per run)
+decode_time =   1544.37 ms :     89 runs (    17.35 per run)
+batchd_time = 198436.20 ms :  36602 runs (     5.42 per run)
+prompt_time =  19209.54 ms :  17538 runs (     1.10 per run)
+tokens per second =    22.347 (  7004)
+total time  =   313.424 secs / 0:05:13.424
+
+CUDA - Aladdin - Performance
+fallbacks   =   0p,   0h
+mel_time    =   1671.13 ms 
+sample_time =  14338.36 ms :  37195 runs (     0.39 per run)
+encode_time = 322983.31 ms :     81 runs (  3987.45 per run)
+decode_time =   3591.74 ms :     73 runs (    49.20 per run)
+batchd_time = 354099.22 ms :  36718 runs (     9.64 per run)
+prompt_time =  64583.18 ms :  17764 runs (     3.64 per run)
+tokens per second =     9.204 (  6991)
+total time  =   759.596 secs / 0:12:39.596
+=============================================================
+Vulkan - World Record - Balanced
+fallbacks   =   0p,   0h
+mel_time    =     76.71 ms 
+sample_time =   2068.34 ms :   2195 runs (     0.94 per run)
+encode_time =   2982.03 ms :      3 runs (   994.01 per run)
+decode_time =     30.34 ms :      2 runs (    15.17 per run)
+batchd_time =  12827.71 ms :   2180 runs (     5.88 per run)
+prompt_time =    256.50 ms :    218 runs (     1.18 per run)
+tokens per second =    22.846 (   415)
+total time  =    18.165 secs / 0:00:18.165
+
+CUDA - World Record - Balanced
+fallbacks   =   0p,   0h
+mel_time    =     56.08 ms 
+sample_time =    900.40 ms :   2378 runs (     0.38 per run)
+encode_time =  11967.88 ms :      3 runs (  3989.29 per run)
+decode_time =     32.33 ms :      1 runs (    32.33 per run)
+batchd_time =  23092.43 ms :   2373 runs (     9.73 per run)
+prompt_time =   1640.39 ms :    440 runs (     3.73 per run)
+tokens per second =    11.798 (   444)
+total time  =    37.633 secs / 0:00:37.633
+
+
+Vulkan - Aladdin - Balanced
+fallbacks   =   0p,   0h
+mel_time    =   1639.96 ms 
+sample_time =  35353.12 ms :  37090 runs (     0.95 per run)
+encode_time =  79544.20 ms :     80 runs (   994.30 per run)
+decode_time =   1344.30 ms :     89 runs (    15.10 per run)
+batchd_time = 205742.73 ms :  36602 runs (     5.62 per run)
+prompt_time =  19343.90 ms :  17538 runs (     1.10 per run)
+tokens per second =    20.520 (  7004)
+total time  =   341.328 secs / 0:05:41.328
+
+CUDA - Aladdin - Balanced
+fallbacks   =   0p,   0h
+mel_time    =   1652.25 ms 
+sample_time =  14360.71 ms :  37195 runs (     0.39 per run)
+encode_time = 322510.88 ms :     81 runs (  3981.62 per run)
+decode_time =   3421.99 ms :     73 runs (    46.88 per run)
+batchd_time = 353664.28 ms :  36718 runs (     9.63 per run)
+prompt_time =  64351.17 ms :  17764 runs (     3.62 per run)
+tokens per second =     9.219 (  6991)
+total time  =   758.309 secs / 0:12:38.309
+
+=============================================================
+Vulkan - World Record - Power Saver
+CUDA - World Record - Power Saver
+Vulkan - Aladdin - Power Saver
+CUDA - Aladdin - Power Saver
+

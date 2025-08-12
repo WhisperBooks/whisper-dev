@@ -1,4 +1,46 @@
+Mark Kislingburg
 Vulkan
+fallbacks   =   0p,   0h
+mel_time    =     30.13 ms
+sample_time =    791.58 ms :   2480 runs (     0.32 per run)
+encode_time =    460.27 ms :      3 runs (   153.42 per run)
+decode_time =    132.17 ms :     16 runs (     8.26 per run)
+batchd_time =   4617.62 ms :   2460 runs (     1.88 per run)
+prompt_time =     55.83 ms :    440 runs (     0.13 per run)
+tokens per second =    76.435 (   463)
+total time  =     6.057 secs / 0:00:06.057
 
 CUDA
+fallbacks   =   0p,   0h
+mel_time    =     23.61 ms
+sample_time =    639.05 ms :   2194 runs (     0.29 per run)
+encode_time =    562.31 ms :      3 runs (   187.44 per run)
+decode_time =     26.08 ms :      2 runs (    13.04 per run)
+batchd_time =   5653.93 ms :   2179 runs (     2.59 per run)
+prompt_time =     28.01 ms :    218 runs (     0.13 per run)
+tokens per second =    60.353 (   417)
+total time  =     6.909 secs / 0:00:06.909
+
+Aladdin
+Vulkan
+fallbacks   =   0p,   0h
+mel_time    =    833.78 ms
+sample_time =  10960.91 ms :  37309 runs (     0.29 per run)
+encode_time =  10213.48 ms :     79 runs (   129.28 per run)
+decode_time =    387.80 ms :     51 runs (     7.60 per run)
+batchd_time =  68066.84 ms :  36864 runs (     1.85 per run)
+prompt_time =   2080.05 ms :  17311 runs (     0.12 per run)
+tokens per second =    76.623 (  7027)
+total time  =    91.709 secs / 0:01:31.709
+
+CUDA
+fallbacks   =   0p,   0h
+mel_time    =    832.30 ms
+sample_time =  10539.22 ms :  37182 runs (     0.28 per run)
+encode_time =  12483.61 ms :     80 runs (   156.05 per run)
+decode_time =    522.27 ms :     53 runs (     9.85 per run)
+batchd_time =  94233.91 ms :  36730 runs (     2.57 per run)
+prompt_time =   2063.45 ms :  17538 runs (     0.12 per run)
+tokens per second =    58.427 (  7002)
+total time  =   119.842 secs / 0:01:59.842
 
