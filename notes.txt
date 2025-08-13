@@ -783,3 +783,5 @@ Windows / Linux x64
 cmake -B build -DGGML_CPU_ALL_VARIANTS=ON -DGGML_BACKEND_DL=ON -DBUILD_SHARED_LIBS=ON
 Mac / Linux ARM
 cmake -B build -DGGML_CPU_ARM_ARCH=OFF -DGGML_NATIVE=OFF -DGGML_CPU_ALL_VARIANTS=ON -DGGML_BACKEND_DL=ON -DBUILD_SHARED_LIBS=ON
+
+clear; build\bin\Release\whisper-cli2 -m models\ggml-medium.en.bin -f audio\dictation.mp3 -ng -openvino -ts
