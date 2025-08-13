@@ -640,7 +640,7 @@ whisper_print_timings:   batchd time = 775283.12 ms / 36027 runs (    21.52 ms p
 whisper_print_timings:   prompt time =  85695.55 ms / 19521 runs (     4.39 ms per run)
 whisper_print_timings:    total time =   1386.908 s
 
-sudo apt-get install cmake libsdl2-dev glslc build-essential git libgl1-mesa-dev ffmpeg libopenblas-openmp-dev libopenmpi-dev libtbb-dev ocl-icd-opencl-dev libvulkan1
+sudo apt-get install cmake libsdl2-dev build-essential git libgl1-mesa-dev ffmpeg libopenblas-openmp-dev libopenmpi-dev libtbb-dev ocl-icd-opencl-dev
 wget https://peardox.com/data/data.tgz
 wget https://peardox.com/data/build_libs.tgz
 

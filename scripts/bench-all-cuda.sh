@@ -55,6 +55,3 @@ whisper/whisper-cli2 -m models/ggml-large-v3-turbo.bin -f audio/aladdin.mp3 -ng 
 
 echo "Done..."
 
-
-echo "Done..."
-
