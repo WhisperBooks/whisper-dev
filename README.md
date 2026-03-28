@@ -4,7 +4,12 @@ On first use make sure you run...
 git submodule update --init --recursive --remote
 ```
 
-
+```
+Install vcpkg
+vcpkg install sdl2
+vcpkg install openblas
+vcpkg install pkgconf
+```
 
 After init to sync to latest branch...
 
