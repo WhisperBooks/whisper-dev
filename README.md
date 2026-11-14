@@ -31,7 +31,7 @@ generated from.
 | Compiler | Visual Studio 2022 / 2026 with C++ | gcc / clang | Xcode command line tools |
 | CMake | 3.21+ | 3.21+ | 3.21+ |
 | CUDA | CUDA Toolkit (`CUDA_PATH`), required | used when `nvcc` is found | - |
-| Vulkan | Vulkan SDK (`VULKAN_SDK`), required | used when `VULKAN_SDK` is set | (Metal is built in) |
+| Vulkan | Vulkan SDK (`VULKAN_SDK`), required | Vulkan SDK, or the distribution's packages (Ubuntu: `libvulkan-dev glslc spirv-headers`) | (Metal is built in) |
 | AMD HIP | HIP SDK (`HIP_PATH`) + Ninja, optional | ROCm (`ROCM_PATH`), optional | - |
 
 On Windows `build.bat` works from any prompt: it sets up the x64 Visual
@@ -65,7 +65,7 @@ Extra arguments to `build.bat` / `build.sh` go to the configure step:
 | Option | Default | |
 |---|---|---|
 | `WHISPER_DEV_CUDA` | Windows ON, Linux if `nvcc` found | CUDA backend |
-| `WHISPER_DEV_VULKAN` | Windows ON, Linux if `VULKAN_SDK` set | Vulkan backend |
+| `WHISPER_DEV_VULKAN` | Windows ON, Linux if `VULKAN_SDK` is set or `glslc` is found | Vulkan backend |
 | `WHISPER_DEV_HIP` | ON if `HIP_PATH` / `ROCM_PATH` set | AMD HIP backend |
 | `WHISPER_DEV_HIP_TARGETS` | `gfx1030;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201` | AMD GPU architectures |
 | `CUDA_ALL` | OFF | CUDA archs `50;75;86;89;120` instead of ggml's default list |
