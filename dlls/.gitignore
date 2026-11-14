@@ -1,3 +1,6 @@
-*.dll
-*.so
-*.dylib
+# Everything here is build output of ../CMakeLists.txt (libraries, runtimes,
+# rocblas/ and hipblaslt/ kernel folders, debug/): only this file and
+# README.md are tracked.
+*
+!.gitignore
+!README.md
