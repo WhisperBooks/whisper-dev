@@ -116,8 +116,10 @@ the host need the host's glibc or newer (Ubuntu 26.04: 2.43 - not even
 Ubuntu 24.04 loads them). `container-build/build.sh` builds in Ubuntu
 22.04 (glibc 2.35, the oldest ROCm supports) with CUDA, ROCm, the Vulkan
 SDK and patchelf inside, and fills `dlls/` the same way; it builds
-ffmpeg-dev too (`container-build/build.sh ../ffmpeg-dev`). See
-`container-build/README.md`. `./build.sh` prints first what it found
+ffmpeg-dev too (`container-build/build.sh ../ffmpeg-dev`). It needs Docker
+or Podman - **`container-build/README.md` has everything: why, what to
+install and how (Docker, Podman), the AMD package, building, checking
+the result, problems.** `./build.sh` prints first what it found
 (CUDA, Vulkan SDK, ROCm, patchelf) and why a backend will be missing;
 ROCm is found in `/opt/rocm` without `ROCM_PATH`.
 
