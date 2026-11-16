@@ -34,6 +34,20 @@ fi
 # (AMDGPU_INSTALL_URL), or takes an amdgpu-install_*.deb put in this folder
 # the image (cached after the first time: several GB to download then)
 "$DOCKER" build -t "$IMAGE" "$HERE"
+# whisper-dev only: the GPU SDKs must be in the image BEFORE an hour of
+# compiling - a missing one stops here (ALLOW_MISSING=1 builds without it)
+if [ "$REPO" = "$(cd "$HERE/.." && pwd)" ] && [ -z "$ALLOW_MISSING" ]; then
+  MISSING=
+  "$DOCKER" run --rm "$IMAGE" test -x /opt/rocm/bin/hipconfig || MISSING="$MISSING ROCm(HIP)"
+  "$DOCKER" run --rm "$IMAGE" test -x /usr/local/cuda/bin/nvcc || MISSING="$MISSING CUDA"
+  "$DOCKER" run --rm "$IMAGE" sh -c 'test -x "$VULKAN_SDK/bin/glslc"' || MISSING="$MISSING Vulkan"
+  if [ -n "$MISSING" ]; then
+    echo "The image lacks:$MISSING - nothing compiled. See the image build above"
+    echo "(or build without them: ALLOW_MISSING=1 container-build/build.sh)."
+    exit 1
+  fi
+  echo "Image has CUDA, Vulkan and ROCm."
+fi
 TTY=
 [ -t 1 ] && TTY=-t
 # as the host user, so dlls/ and the build tree belong to you: Docker runs

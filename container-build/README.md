@@ -148,6 +148,11 @@ a normal build's `build/`. Arguments after the repository go to its
 `build.sh` (`container-build/build.sh -DCUDA_ALL=ON`); `JOBS=4` limits
 the parallel compiles (CUDA and ROCm compiles need a lot of memory each).
 
+Before compiling whisper-dev, the script checks that the image has CUDA,
+the Vulkan SDK and ROCm, and stops if one is missing - so an hour of CUDA
+compiling never ends without HIP. `ALLOW_MISSING=1` builds without the
+missing ones on purpose.
+
 At its start whisper-dev's build lists what it found - CUDA, the Vulkan
 SDK, ROCm, patchelf - and why a backend is missing; near the end it says
 how many CUDA / ROCm runtime libraries and kernel files it bundled, and
