@@ -36,18 +36,20 @@ if (NOT MODULES)
     return()
 endif()
 
-# the SDK folders (as given and with their links resolved: /opt/rocm is
-# usually a link to /opt/rocm-7.x)
-set(_inc)
+# the SDK folders, with their links resolved (/opt/rocm is usually a link
+# to /opt/rocm-7.x; NVIDIA's packages register /usr/local/cuda-13/... -
+# links - with the system loader): a library is bundled when its REAL
+# path is inside one of them (comparing the paths as found missed every
+# CUDA library: whisper-dev-07 bundled none)
+set(_real_roots)
 set(_dirs)
 foreach (_r ${ROOTS})
     if (NOT EXISTS "${_r}")
         continue()
     endif()
     file(REAL_PATH "${_r}" _rr)
+    list(APPEND _real_roots "${_rr}/")
     foreach (_p "${_r}" "${_rr}")
-        string(REGEX REPLACE "([][+.*()^$?|\\\\])" "\\\\\\1" _q "${_p}")
-        list(APPEND _inc "^${_q}/")
         foreach (_l lib lib64 targets/x86_64-linux/lib)
             if (IS_DIRECTORY "${_p}/${_l}")
                 list(APPEND _dirs "${_p}/${_l}")
@@ -55,20 +57,33 @@ foreach (_r ${ROOTS})
         endforeach()
     endforeach()
 endforeach()
-if (NOT _inc)
+if (NOT _real_roots)
     message(WARNING "whisper-dev: no SDK folder to bundle from (ROOTS='${ROOTS}')")
     return()
 endif()
 
 file(GET_RUNTIME_DEPENDENCIES
     LIBRARIES ${MODULES}
-    RESOLVED_DEPENDENCIES_VAR _deps
+    RESOLVED_DEPENDENCIES_VAR _all
     UNRESOLVED_DEPENDENCIES_VAR _missing
     DIRECTORIES ${_dirs} "${DEST}"
     # whisper-dev's own (already in DEST) and the NVIDIA driver's
-    PRE_EXCLUDE_REGEXES "^libggml" "^libwhisper" "^libgomp" "^libcuda\\.so"
-    POST_INCLUDE_REGEXES ${_inc}
-    POST_EXCLUDE_REGEXES ".*")
+    PRE_EXCLUDE_REGEXES "^libggml" "^libwhisper" "^libgomp" "^libcuda\\.so")
+set(_deps)
+foreach (_d ${_all})
+    file(REAL_PATH "${_d}" _real)
+    foreach (_root ${_real_roots})
+        string(FIND "${_real}" "${_root}" _at)
+        if (_at EQUAL 0)
+            list(APPEND _deps "${_d}")
+            break()
+        endif()
+    endforeach()
+endforeach()
+list(REMOVE_DUPLICATES _deps)
+if (NOT _deps)
+    message(STATUS "whisper-dev: the GPU backends need nothing from ${ROOTS} (resolved: ${_all}; not found: ${_missing})")
+endif()
 
 set(_copied)
 foreach (_d ${_deps})
