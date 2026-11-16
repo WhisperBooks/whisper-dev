@@ -17,6 +17,9 @@
 # - NOT bundled: the GPU drivers (libcuda.so from NVIDIA's driver; the
 #   kernel's amdgpu), and system libraries outside ROOTS - those the
 #   bundled ones need are listed, to check on the target systems.
+# - Licences: each bundled library's (and libgomp's) Debian copyright file
+#   and NVIDIA's EULA.txt into DEST/licences/ (CUDA-*, ROCm-*, GCC-*), for
+#   whoever ships the folder (dpkg needed: the container has it).
 # MODULES (optional) replaces the two backends (for testing the script).
 cmake_minimum_required(VERSION 3.21)
 
@@ -193,4 +196,76 @@ if (_bundled)
     list(REMOVE_DUPLICATES _names)
     list(JOIN _names " " _names)
     message(STATUS "whisper-dev: system libraries the bundled set needs: ${_names}")
+endif()
+
+# licences of what is bundled, for whoever ships dlls/: each library's
+# Debian package and its copyright file (/usr/share/doc/<package>/
+# copyright) into DEST/licences/ as CUDA-<package>-copyright.txt,
+# ROCm-<package>-copyright.txt or GCC-<package>-copyright.txt (libgomp,
+# copied by the build itself), plus NVIDIA's CUDA EULA.txt.
+find_program(_dpkg dpkg)
+set(_lic_names ${_already})
+foreach (_f ${_copied})
+    get_filename_component(_n "${_f}" NAME)
+    list(APPEND _lic_names "${_n}")
+endforeach()
+if (EXISTS "${DEST}/libgomp.so.1")
+    list(APPEND _lic_names libgomp.so.1)
+endif()
+if (_dpkg AND _lic_names)
+    file(MAKE_DIRECTORY "${DEST}/licences")
+    set(_lic_count 0)
+    set(_no_pkg)
+    set(_seen)
+    foreach (_n ${_lic_names})
+        execute_process(COMMAND "${_dpkg}" -S "*/${_n}" OUTPUT_VARIABLE _out ERROR_QUIET RESULT_VARIABLE _r)
+        if (NOT _r EQUAL 0 OR _out STREQUAL "")
+            list(APPEND _no_pkg "${_n}")
+            continue()
+        endif()
+        string(REPLACE "\n" ";" _lines "${_out}")
+        foreach (_l ${_lines})
+            # "package[:arch][, package...]: /path"
+            if (NOT _l MATCHES "^([^:,]+)[^ ]*: (.*)$")
+                continue()
+            endif()
+            set(_pkg "${CMAKE_MATCH_1}")
+            set(_path "${CMAKE_MATCH_2}")
+            if (_pkg IN_LIST _seen)
+                continue()
+            endif()
+            list(APPEND _seen "${_pkg}")
+            if (_path MATCHES "/cuda")
+                set(_group CUDA)
+            elseif (_path MATCHES "/rocm")
+                set(_group ROCm)
+            elseif (_n MATCHES "^libgomp")
+                set(_group GCC)
+            else()
+                set(_group System)
+            endif()
+            if (EXISTS "/usr/share/doc/${_pkg}/copyright")
+                file(COPY_FILE "/usr/share/doc/${_pkg}/copyright"
+                    "${DEST}/licences/${_group}-${_pkg}-copyright.txt" ONLY_IF_DIFFERENT)
+                math(EXPR _lic_count "${_lic_count} + 1")
+            endif()
+        endforeach()
+    endforeach()
+    # NVIDIA's licence for the toolkit (cudart / cuBLAS are redistributable
+    # under its attachment A)
+    foreach (_r ${ROOTS})
+        if (_r MATCHES "cuda" AND EXISTS "${_r}/EULA.txt")
+            file(COPY_FILE "${_r}/EULA.txt" "${DEST}/licences/CUDA-EULA.txt" ONLY_IF_DIFFERENT)
+            math(EXPR _lic_count "${_lic_count} + 1")
+            break()
+        endif()
+    endforeach()
+    message(STATUS "whisper-dev: ${_lic_count} licence file(s) in ${DEST}/licences")
+    if (_no_pkg)
+        list(JOIN _no_pkg " " _no_pkg)
+        message(WARNING "whisper-dev: no package (so no licence file) found for: ${_no_pkg}")
+    endif()
+elseif (_lic_names)
+    message(WARNING "whisper-dev: dpkg not found - the bundled libraries' licence files were not collected "
+        "(build in container-build/ to have them)")
 endif()
