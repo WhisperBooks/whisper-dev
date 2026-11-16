@@ -40,12 +40,15 @@ CUDA, ROCm or Vulkan SDK installed, and no GPU, to build.
    git clone --recurse-submodules https://github.com/G3DGames/ffmpeg-dev
    ```
 
-4. For the AMD HIP backend only: AMD's `amdgpu-install` package **for
-   Ubuntu 22.04 (jammy)** in this folder. Download it from AMD's ROCm
-   installation page ("Ubuntu 22.04", the file named
-   `amdgpu-install_<version>_all.deb`) - not the one for your own Ubuntu
-   version. Without it the image has no ROCm and no HIP backend is built
-   (the script says so). The file is not tracked by git.
+4. Nothing for the AMD HIP backend: the image fetches AMD's
+   `amdgpu-install` for Ubuntu 22.04 (jammy) itself - the address is
+   `AMDGPU_INSTALL_URL` in the `Dockerfile` (release 31.60:
+   `https://repo.radeon.com/amdgpu-install/31.60/ubuntu/jammy/`). For
+   another ROCm release, either put that release's **jammy**
+   `amdgpu-install_<version>_all.deb` in this folder (it wins; git ignores
+   it) or build the image with `--build-arg AMDGPU_INSTALL_URL=...`
+   (`""` builds without ROCm). Not the package for your own Ubuntu
+   version: the container is Ubuntu 22.04.
 
 ## Installing Docker or Podman
 
@@ -131,9 +134,8 @@ container-build/build.sh ../ffmpeg-dev
 container-build/build.sh
 ```
 
-The first run builds the image: CMake, CUDA, the Vulkan SDK and - with
-the `.deb` here - ROCm. That is a download of several GB and can take an
-hour; later runs reuse the image (adding the `.deb` later builds the
+The first run builds the image: CMake, CUDA, the Vulkan SDK and ROCm. That is a download of several GB and can take an
+hour; later runs reuse the image (a `.deb` put here later builds the
 ROCm step once more). The repository is mounted into the container at the same path it has on
 your machine, so the results land where a normal build puts them:
 
@@ -176,7 +178,7 @@ prints `[$ORIGIN]`.
 Set when the image is built (`Dockerfile`, `ARG` lines): CMake
 (`CMAKE_VERSION`), the CUDA toolkit package (`CUDA_PACKAGE`,
 cuda-toolkit-13-5), the Vulkan SDK (`VULKAN_SDK_VERSION`, latest),
-patchelf (`PATCHELF_VERSION`); ROCm is whatever the `.deb` here installs.
+patchelf (`PATCHELF_VERSION`), ROCm (`AMDGPU_INSTALL_URL`, or a `.deb` here).
 To change one, build the image by hand once, e.g.
 
 ```

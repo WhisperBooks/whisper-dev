@@ -30,10 +30,8 @@ if ! command -v "$DOCKER" > /dev/null 2>&1; then
   echo "$DOCKER is not installed: see container-build/README.md, \"Installing Docker or Podman\""
   exit 1
 fi
-if ! ls "$HERE"/amdgpu-install_*.deb > /dev/null 2>&1; then
-  echo "NOTE: no amdgpu-install_*.deb for Ubuntu 22.04 (jammy) in $HERE:"
-  echo "      the image gets no ROCm, so whisper-dev builds no HIP backend"
-fi
+# ROCm: the Dockerfile fetches AMD's amdgpu-install for Ubuntu 22.04 itself
+# (AMDGPU_INSTALL_URL), or takes an amdgpu-install_*.deb put in this folder
 # the image (cached after the first time: several GB to download then)
 "$DOCKER" build -t "$IMAGE" "$HERE"
 TTY=

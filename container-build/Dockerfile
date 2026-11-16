@@ -13,6 +13,9 @@ ARG CUDA_PACKAGE=cuda-toolkit-13-5
 # LunarG's Vulkan SDK: "latest" or a version such as 1.4.321.1
 ARG VULKAN_SDK_VERSION=latest
 ARG PATCHELF_VERSION=0.18.0
+# AMD's amdgpu-install for Ubuntu 22.04 (jammy), which installs ROCm: used
+# when no amdgpu-install_*.deb was put in this folder; "" = no ROCm (no HIP)
+ARG AMDGPU_INSTALL_URL=https://repo.radeon.com/amdgpu-install/31.60/ubuntu/jammy/amdgpu-install_31.60.316000-1_all.deb
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       build-essential git ninja-build nasm pkg-config ca-certificates curl xz-utils file python3 \
@@ -59,16 +62,25 @@ RUN cd /opt/vulkan/current/lib 2>/dev/null \
 ENV VULKAN_SDK=/opt/vulkan/current
 ENV PATH=$VULKAN_SDK/bin:$PATH
 
-# ROCm through AMD's amdgpu-install for Ubuntu 22.04 (jammy), when its .deb
-# was put in this folder (AMD's site does not offer a stable URL); without
-# it the image has no ROCm and whisper-dev builds no HIP backend
+# ROCm through AMD's amdgpu-install for Ubuntu 22.04 (jammy): a .deb put in
+# this folder, else AMDGPU_INSTALL_URL; neither: no ROCm, no HIP backend
+# amdgpu-install also registers AMD's "graphics" repository (Mesa, OpenGL,
+# Vulkan user space), which ROCm does not need and AMD does not publish for
+# every release and Ubuntu version (31.60: graphics/26.16 jammy is a 404,
+# and apt stops) - its lines are removed before apt reads the lists
 COPY . /ctx
-RUN if ls /ctx/amdgpu-install_*.deb > /dev/null 2>&1; then \
+RUN DEB=$(ls /ctx/amdgpu-install_*.deb 2>/dev/null | head -n 1); \
+    if [ -z "$DEB" ] && [ -n "${AMDGPU_INSTALL_URL}" ]; then \
+      DEB=/tmp/amdgpu-install.deb; \
+      curl -fsSL -o "$DEB" "${AMDGPU_INSTALL_URL}"; \
+    fi; \
+    if [ -n "$DEB" ]; then \
       apt-get update \
-      && apt-get install -y /ctx/amdgpu-install_*.deb \
+      && apt-get install -y "$DEB" \
+      && sed -i '\#repo.radeon.com/graphics#d' /etc/apt/sources.list.d/*.list \
       && apt-get update \
       && amdgpu-install -y --usecase=rocm --no-dkms \
-      && rm -rf /var/lib/apt/lists/*; \
+      && rm -rf /var/lib/apt/lists/* /tmp/amdgpu-install.deb; \
     else \
-      echo "No amdgpu-install_*.deb: no ROCm in this image"; \
+      echo "No amdgpu-install package: no ROCm in this image"; \
     fi
