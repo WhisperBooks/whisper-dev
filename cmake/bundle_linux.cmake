@@ -143,10 +143,18 @@ foreach (_d ${_deps})
     endforeach()
 endforeach()
 
-# $ORIGIN: the bundled libraries find each other (and nothing of the SDK)
+# $ORIGIN: the bundled libraries find each other (and nothing of the SDK).
+# Also the ones an earlier run copied (a run that stopped before this step
+# left them unpatched), and the backends themselves: CMake gives a HIP
+# module no RUNPATH, so libggml-hip.so found libhipblas & co. only where
+# ROCm is installed.
+set(_patch ${MODULES} ${_copied})
+foreach (_n ${_already})
+    list(APPEND _patch "${DEST}/${_n}")
+endforeach()
 find_program(_patchelf patchelf)
 if (_patchelf)
-    foreach (_f ${_copied})
+    foreach (_f ${_patch})
         execute_process(COMMAND "${_patchelf}" --set-rpath "$ORIGIN" "${_f}" RESULT_VARIABLE _r)
         if (NOT _r EQUAL 0)
             message(WARNING "whisper-dev: patchelf failed on ${_f}")
