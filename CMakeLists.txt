@@ -167,6 +167,36 @@ if (WHISPER_DEV_HIP AND NOT WIN32)
     set(GGML_HIP ON)
     set(AMDGPU_TARGETS ${WHISPER_DEV_HIP_TARGETS})
     set(GPU_TARGETS ${WHISPER_DEV_HIP_TARGETS})
+    # CMake takes the ROCm root from the HIP compiler's folder. In ROCm 7.x
+    # the compiler sits in its own part (/opt/rocm/core-NN/lib/llvm), which
+    # has no hip-lang package, so enable_language(HIP) fails. Find the folder
+    # that does have it and tell CMake (and find_package) where it is.
+    if (NOT CMAKE_HIP_COMPILER_ROCM_ROOT)
+        if (DEFINED ENV{ROCM_PATH})
+            set(_rocm "$ENV{ROCM_PATH}")
+        else()
+            set(_rocm "/opt/rocm")
+        endif()
+        file(GLOB _hip_lang
+            "${_rocm}/lib/cmake/hip-lang/hip-lang-config.cmake"
+            "${_rocm}/lib64/cmake/hip-lang/hip-lang-config.cmake"
+            "${_rocm}/*/lib/cmake/hip-lang/hip-lang-config.cmake"
+            "${_rocm}/*/lib64/cmake/hip-lang/hip-lang-config.cmake")
+        if (_hip_lang)
+            list(GET _hip_lang 0 _hip_lang)
+            # <root>/lib/cmake/hip-lang/hip-lang-config.cmake -> <root>
+            get_filename_component(_hip_root "${_hip_lang}" DIRECTORY)
+            get_filename_component(_hip_root "${_hip_root}" DIRECTORY)
+            get_filename_component(_hip_root "${_hip_root}" DIRECTORY)
+            get_filename_component(_hip_root "${_hip_root}" DIRECTORY)
+            set(CMAKE_HIP_COMPILER_ROCM_ROOT "${_hip_root}" CACHE PATH "ROCm folder with the hip-lang CMake package")
+            list(APPEND CMAKE_PREFIX_PATH "${_hip_root}" "${_rocm}")
+            message(STATUS "whisper-dev: ROCm root for HIP ${_hip_root}")
+        else()
+            message(WARNING "whisper-dev: no hip-lang-config.cmake under ${_rocm} - "
+                "if HIP fails to configure, pass -DCMAKE_HIP_COMPILER_ROCM_ROOT=<ROCm folder>")
+        endif()
+    endif()
 endif()
 
 # Linux / macOS: the libraries find each other in their OWN folder ($ORIGIN /
