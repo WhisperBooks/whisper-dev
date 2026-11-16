@@ -200,9 +200,10 @@ endif()
 
 # licences of what is bundled, for whoever ships dlls/: each library's
 # Debian package and its copyright file (/usr/share/doc/<package>/
-# copyright) into DEST/licences/ as CUDA-<package>-copyright.txt,
-# ROCm-<package>-copyright.txt or GCC-<package>-copyright.txt (libgomp,
-# copied by the build itself), plus NVIDIA's CUDA EULA.txt.
+# copyright) into DEST/licences/ as CUDA-<package>-copyright.txt or
+# GCC-<package>-copyright.txt (libgomp, copied by the build itself),
+# NVIDIA's CUDA EULA.txt, and ROCm's component licences
+# (ROCm-<component>-<file>).
 find_program(_dpkg dpkg)
 set(_lic_names ${_already})
 foreach (_f ${_copied})
@@ -269,6 +270,42 @@ if (_dpkg AND _lic_names)
                 math(EXPR _lic_count "${_lic_count} + 1")
             endif()
         endforeach()
+    endforeach()
+    # ROCm 7.x packages (amdrocm-*) have no /usr/share/doc entry: each
+    # component keeps its licence in <ROCm>/share/doc/<component>/ (hip,
+    # hipblaslt, rocblas, amd_comgr, ...; LLVM's under lib/llvm). All of
+    # them are copied - more texts than libraries, but none missing.
+    set(_rocm_docs)
+    foreach (_r ${ROOTS})
+        if (NOT _r MATCHES "rocm")
+            continue()
+        endif()
+        foreach (_base "${_r}" "${_r}/*" "${_r}/*/lib/llvm" "${_r}/lib/llvm")
+            foreach (_pat LICENSE* License* license* LICENCE* COPYING* NOTICE* copyright)
+                file(GLOB _found "${_base}/share/doc/*/${_pat}" "${_base}/${_pat}")
+                list(APPEND _rocm_docs ${_found})
+            endforeach()
+        endforeach()
+    endforeach()
+    set(_rocm_real)
+    foreach (_f ${_rocm_docs})
+        if (IS_DIRECTORY "${_f}")
+            continue()
+        endif()
+        file(REAL_PATH "${_f}" _rf)
+        if (_rf IN_LIST _rocm_real)
+            continue()
+        endif()
+        list(APPEND _rocm_real "${_rf}")
+        get_filename_component(_fn "${_f}" NAME)
+        get_filename_component(_comp "${_f}" DIRECTORY)
+        get_filename_component(_comp "${_comp}" NAME)
+        # the per-GPU kernel packages' folders repeat their library's text
+        if (_comp MATCHES "gfx[0-9]")
+            continue()
+        endif()
+        file(COPY_FILE "${_f}" "${DEST}/licences/ROCm-${_comp}-${_fn}" ONLY_IF_DIFFERENT)
+        math(EXPR _lic_count "${_lic_count} + 1")
     endforeach()
     # NVIDIA's licence for the toolkit (cudart / cuBLAS are redistributable
     # under its attachment A)
