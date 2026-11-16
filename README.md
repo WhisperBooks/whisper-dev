@@ -68,7 +68,7 @@ Extra arguments to `build.bat` / `build.sh` go to the configure step:
 | `WHISPER_DEV_VULKAN` | Windows ON, Linux if `VULKAN_SDK` is set or `glslc` is found | Vulkan backend |
 | `WHISPER_DEV_HIP` | ON if `HIP_PATH` / `ROCM_PATH` set | AMD HIP backend |
 | `WHISPER_DEV_HIP_TARGETS` | `gfx1030;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201` | AMD GPU architectures |
-| `CUDA_ALL` | OFF | CUDA archs `50;75;86;89;120` instead of ggml's default list |
+| `CUDA_ALL` | OFF | CUDA archs `50;75;86;89;120` instead of ggml's default list (`75;86;89;120` with CUDA 13+, which no longer builds for Maxwell / Pascal / Volta) |
 | `WHISPER_DEV_BLAS` | OFF | OpenBLAS backend (whisper.cpp always uses one that is present, so it takes the choice away) |
 | `WHISPER_DEV_OPENVINO` | OFF | OpenVINO encoder (links into whisper, which then needs OpenVINO everywhere) |
 
@@ -97,10 +97,36 @@ machine (source paths in assert messages start at `whisper.cpp/`).
 
 On Linux, which backends get built depends on what is installed: CUDA
 when `nvcc` is found, Vulkan when `glslc` (or `VULKAN_SDK`) is, HIP when
-`ROCM_PATH` is set. SteamOS / the Steam Deck / an AMD Steam Machine: build
-on a desktop Linux of the same CPU family with Vulkan (Ubuntu:
-`sudo apt install libvulkan-dev glslc spirv-headers`) and, for HIP, ROCm;
-the CPU variants cover every x86-64 CPU.
+`ROCM_PATH` is set. None of them needs that GPU in the build machine.
+Install the SDKs from their makers (the distributions' packages trail):
+
+- Vulkan: LunarG's SDK tarball (vulkan.lunarg.com), then
+  `source <version>/setup-env.sh` (sets `VULKAN_SDK`, puts `glslc` on PATH).
+- CUDA: NVIDIA's apt repository (developer.nvidia.com/cuda-downloads,
+  "deb (network)"), `cuda-toolkit` only - no driver needed to build -
+  and `/usr/local/cuda/bin` on PATH.
+  With CUDA 13 the backend runs on Turing (GTX 16xx / RTX 20xx) and
+  newer, and needs NVIDIA driver 580 or newer on the user's system; where
+  it cannot load, ggml skips it and Vulkan / the CPU are used.
+- ROCm: AMD's `amdgpu-install` (repo.radeon.com), `amdgpu-install
+  --usecase=rocm --no-dkms`, and `ROCM_PATH=/opt/rocm`.
+
+**One build for every Linux system:** with CUDA or HIP built,
+`WHISPER_DEV_BUNDLE_RUNTIMES` (on) copies the runtime libraries the
+backends need into `dlls/` (`cmake/bundle_linux.cmake`): CUDA's cudart,
+cuBLAS and cuBLASLt; ROCm's amdhip64, hipBLAS, rocBLAS, HSA and what
+they use - everything found under the SDK folders - plus rocBLAS's and
+hipBLASLt's kernel files for `WHISPER_DEV_HIP_TARGETS` only (in
+`dlls/rocblas/library`, `dlls/hipblaslt/library`). Each gets RUNPATH
+`$ORIGIN` through `patchelf` (needed: github.com/NixOS/patchelf, or the
+distribution's), so the folder needs no SDK on the target system - only
+the GPU driver: NVIDIA's (`libcuda.so`) for CUDA, the kernel's amdgpu
+for HIP, any driver with Vulkan for Vulkan. The build lists the system
+libraries the bundled set still needs (glibc, libstdc++, libdrm, libnuma,
+...) - check those exist on the oldest target. Expect a large folder
+(cuBLASLt alone is several hundred MB; rocBLAS kernels grow with each
+target). `-DWHISPER_DEV_BUNDLE_RUNTIMES=OFF` leaves them out (systems with
+the SDK installed).
 
 On Windows, HIP is built in a second tree (`build/hip`) with the HIP SDK's own
 clang, because that compiler cannot share a tree with MSVC, which CUDA needs.

@@ -16,6 +16,8 @@
 #   WHISPER_DEV_BLAS      OpenBLAS backend      OFF (see below)
 #   WHISPER_DEV_OPENVINO  OpenVINO encoder      OFF (see below)
 #   CUDA_ALL              CUDA archs 50;75;86;89;120 instead of ggml's default list
+#                         (75;86;89;120 with CUDA 13+, which has no sm_50)
+#   WHISPER_DEV_BUNDLE_RUNTIMES  Linux: CUDA / ROCm runtimes into dlls/  ON
 #
 # The CPU backend is always built in every variant the platform supports
 # (GGML_CPU_ALL_VARIANTS); ggml picks the best one for the machine at run
@@ -80,6 +82,7 @@ option(WHISPER_DEV_HIP      "Build the AMD HIP backend" ${_hip_default})
 option(WHISPER_DEV_BLAS     "Build the OpenBLAS backend (always used when present)" OFF)
 option(WHISPER_DEV_OPENVINO "Build whisper with the OpenVINO encoder (needs OpenVINO at run time)" OFF)
 option(CUDA_ALL             "CUDA architectures 50;75;86;89;120 instead of ggml's default" OFF)
+option(WHISPER_DEV_BUNDLE_RUNTIMES "Linux: copy the CUDA / ROCm runtime libraries the GPU backends need into dlls/" ON)
 set(WHISPER_DEV_HIP_TARGETS "gfx1030;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201" CACHE STRING
     "AMD GPU architectures for HIP (only ones the HIP SDK has rocBLAS kernels for)")
 
@@ -134,7 +137,23 @@ if (WHISPER_DEV_CUDA)
         message(STATUS "whisper-dev: MSVC ${MSVC_VERSION} - passing -allow-unsupported-compiler to nvcc")
     endif()
     if (CUDA_ALL)
-        set(CMAKE_CUDA_ARCHITECTURES "50;75;86;89;120")
+        # CUDA 13 dropped Maxwell / Pascal / Volta (sm_50 - sm_72): 50 only
+        # with an older toolkit (ggml's own default list does the same)
+        set(_nvcc_ver "")
+        set(_nvcc_exe "${CMAKE_CUDA_COMPILER}")
+        if (NOT _nvcc_exe AND DEFINED ENV{CUDA_PATH})
+            set(_nvcc_exe "$ENV{CUDA_PATH}/bin/nvcc")
+        endif()
+        if (_nvcc_exe)
+            execute_process(COMMAND "${_nvcc_exe}" --version OUTPUT_VARIABLE _nvcc_out ERROR_QUIET)
+            string(REGEX MATCH "release ([0-9]+)\\.([0-9]+)" _m "${_nvcc_out}")
+            set(_nvcc_ver "${CMAKE_MATCH_1}")
+        endif()
+        if (_nvcc_ver AND _nvcc_ver GREATER_EQUAL 13)
+            set(CMAKE_CUDA_ARCHITECTURES "75;86;89;120")
+        else()
+            set(CMAKE_CUDA_ARCHITECTURES "50;75;86;89;120")
+        endif()
     elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64" AND NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
         set(CMAKE_CUDA_ARCHITECTURES "87")   # Jetson Orin
     endif()
@@ -206,6 +225,42 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux" AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (_gomp AND EXISTS "${_gomp}" AND IS_ABSOLUTE "${_gomp}")
         get_filename_component(_gomp "${_gomp}" REALPATH)
         list(APPEND _copy_cmds COMMAND ${CMAKE_COMMAND} -E copy_if_different ${_gomp} ${_dest}/libgomp.so.1)
+    endif()
+endif()
+
+# Linux: the GPU backends' runtimes (CUDA: cudart, cuBLAS, cuBLASLt; ROCm:
+# amdhip64, hipBLAS, rocBLAS + kernels, HSA, ...) copied into dlls/ with
+# RUNPATH $ORIGIN, so one build runs on Linux systems without the SDKs (as
+# on Windows; the drivers are the system's). cmake/bundle_linux.cmake.
+if (CMAKE_SYSTEM_NAME MATCHES "Linux" AND WHISPER_DEV_BUNDLE_RUNTIMES AND (WHISPER_DEV_CUDA OR WHISPER_DEV_HIP))
+    set(_roots)
+    if (WHISPER_DEV_CUDA)
+        set(_nvcc_path "${CMAKE_CUDA_COMPILER}")
+        if (NOT _nvcc_path)
+            set(_nvcc_path "${_nvcc}")
+        endif()
+        if (_nvcc_path)
+            get_filename_component(_cuda_root "${_nvcc_path}" REALPATH)
+            get_filename_component(_cuda_root "${_cuda_root}" DIRECTORY)
+            get_filename_component(_cuda_root "${_cuda_root}" DIRECTORY)
+            list(APPEND _roots "${_cuda_root}")
+        endif()
+    endif()
+    if (WHISPER_DEV_HIP)
+        if (DEFINED ENV{ROCM_PATH})
+            list(APPEND _roots "$ENV{ROCM_PATH}")
+        else()
+            list(APPEND _roots "/opt/rocm")
+        endif()
+    endif()
+    string(REPLACE ";" "|" _roots_arg "${_roots}")
+    string(REPLACE ";" "|" _targets_arg "${WHISPER_DEV_HIP_TARGETS}")
+    list(APPEND _copy_cmds COMMAND ${CMAKE_COMMAND} "-DDEST=${_dest}" "-DROOTS=${_roots_arg}"
+        "-DHIP_TARGETS=${_targets_arg}" -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/bundle_linux.cmake)
+    find_program(_patchelf_check patchelf)
+    if (NOT _patchelf_check)
+        message(WARNING "whisper-dev: patchelf not found - the bundled CUDA / ROCm libraries cannot be given "
+            "RUNPATH $ORIGIN (build patchelf from github.com/NixOS/patchelf, or install it)")
     endif()
 endif()
 
