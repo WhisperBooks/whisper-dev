@@ -145,8 +145,17 @@ your machine, so the results land where a normal build puts them:
 
 The build trees are `build-container/` in each repository, separate from
 a normal build's `build/`. Arguments after the repository go to its
-`build.sh` (`container-build/build.sh -DCUDA_ALL=ON`); `JOBS=4` limits
-the parallel compiles (CUDA and ROCm compiles need a lot of memory each).
+`build.sh` (`container-build/build.sh -DWHISPER_DEV_VULKAN=OFF`); `JOBS=4`
+limits the parallel compiles (CUDA and ROCm compiles need a lot of memory
+each).
+
+whisper-dev is built with `CUDA_ALL=ON` here (compiled code for the
+GeForce generations 75/86/89/120, as well as PTX), the build to ship:
+ggml's default list has only PTX for some cards (sm_75: GTX 16xx, RTX 20xx),
+and a driver older than the CUDA toolkit cannot compile that PTX - ggml
+then stops the program ("the provided PTX was compiled with an
+unsupported toolchain"). `-DCUDA_ALL=OFF` after the script's name turns it
+off.
 
 Before compiling whisper-dev, the script checks that the image has CUDA,
 the Vulkan SDK and ROCm, and stops if one is missing - so an hour of CUDA
@@ -207,6 +216,11 @@ To start afresh (a new ROCm, say): `docker rmi whisper-dev-build:ubuntu22.04`.
   repository's `build.sh` is older than the container support and reused
   the host's `build/` folder: `git pull` in it (ffmpeg-dev 3709326 or
   later), then build again.
+- `CUDA error: the provided PTX was compiled with an unsupported
+  toolchain` when a program runs - the card had only PTX and its driver is
+  older than the CUDA toolkit: a build from before `CUDA_ALL` became the
+  container default; build again (the CUDA backend is recompiled). Or
+  update the NVIDIA driver.
 - `does not contain the HIP runtime CMake package`, with no
   `hip-lang-config.cmake` anywhere in the image - ROCm 7.x's `rocm` use
   case installs no development files; the Dockerfile's last step adds them

@@ -52,6 +52,13 @@ if [ "$REPO" = "$(cd "$HERE/.." && pwd)" ] && [ -z "$ALLOW_MISSING" ]; then
   fi
   echo "Image has CUDA, Vulkan and ROCm."
 fi
+# whisper-dev: the build to ship has SASS for the usual GeForce cards
+# (CUDA_ALL: 75;86;89;120). ggml's default list has only PTX for sm_75 and
+# 80, which a driver older than the toolkit cannot compile ("the provided
+# PTX was compiled with an unsupported toolchain" - ggml aborts the
+# program). A -DCUDA_ALL=OFF given to this script comes later and wins.
+WHISPER_ARGS=
+[ "$REPO" = "$(cd "$HERE/.." && pwd)" ] && WHISPER_ARGS=-DCUDA_ALL=ON
 TTY=
 [ -t 1 ] && TTY=-t
 # as the host user, so dlls/ and the build tree belong to you: Docker runs
@@ -64,4 +71,4 @@ esac
 # shellcheck disable=SC2086
 exec "$DOCKER" run --rm $TTY $AS_USER -e HOME=/tmp -e JOBS \
   -e BUILD_DIR=build-container -e BUILD_ROOT=build-container \
-  -v "$REPO:$REPO:z" -w "$REPO" "$IMAGE" sh ./build.sh "$@"
+  -v "$REPO:$REPO:z" -w "$REPO" "$IMAGE" sh ./build.sh $WHISPER_ARGS "$@"

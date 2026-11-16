@@ -166,13 +166,20 @@ elseif (_copied)
 endif()
 
 list(LENGTH _copied _n_copied)
-message(STATUS "whisper-dev: ${_n_copied} GPU runtime librar(ies) bundled from ${ROOTS}")
+if (_n_copied GREATER 0)
+    message(STATUS "whisper-dev: ${_n_copied} GPU runtime librar(ies) bundled from ${ROOTS}")
+endif()
 
 # what the bundled set still needs from the system (to be there on the
 # target systems: glibc, libstdc++, libdrm, libnuma, ... )
-if (_copied)
+# (also when an earlier run bundled them all: the list is the same)
+set(_bundled ${_copied})
+foreach (_n ${_already})
+    list(APPEND _bundled "${DEST}/${_n}")
+endforeach()
+if (_bundled)
     file(GET_RUNTIME_DEPENDENCIES
-        LIBRARIES ${MODULES} ${_copied}
+        LIBRARIES ${MODULES} ${_bundled}
         RESOLVED_DEPENDENCIES_VAR _sys
         UNRESOLVED_DEPENDENCIES_VAR _sys_missing
         DIRECTORIES "${DEST}"
