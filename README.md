@@ -111,6 +111,16 @@ Install the SDKs from their makers (the distributions' packages trail):
 - ROCm: AMD's `amdgpu-install` (repo.radeon.com), `amdgpu-install
   --usecase=rocm --no-dkms`, and `ROCM_PATH=/opt/rocm`.
 
+**Build in the container for other Linux systems.** Libraries built on
+the host need the host's glibc or newer (Ubuntu 26.04: 2.43 - not even
+Ubuntu 24.04 loads them). `container-build/build.sh` builds in Ubuntu
+22.04 (glibc 2.35, the oldest ROCm supports) with CUDA, ROCm, the Vulkan
+SDK and patchelf inside, and fills `dlls/` the same way; it builds
+ffmpeg-dev too (`container-build/build.sh ../ffmpeg-dev`). See
+`container-build/README.md`. `./build.sh` prints first what it found
+(CUDA, Vulkan SDK, ROCm, patchelf) and why a backend will be missing;
+ROCm is found in `/opt/rocm` without `ROCM_PATH`.
+
 **One build for every Linux system:** with CUDA or HIP built,
 `WHISPER_DEV_BUNDLE_RUNTIMES` (on) copies the runtime libraries the
 backends need into `dlls/` (`cmake/bundle_linux.cmake`): CUDA's cudart,

@@ -2,13 +2,48 @@
 # whisper-dev: builds the whisper.cpp libraries and collects them in dlls/
 # Extra arguments go to the configure step, e.g.
 #   ./build.sh -DWHISPER_DEV_CUDA=OFF
+# BUILD_DIR=folder builds there instead of build/ (build-in-container.sh
+# uses build-container/, so the two trees never mix).
 set -e
 cd "$(dirname "$0")"
 if [ ! -f whisper.cpp/include/whisper.h ]; then
   git submodule update --init --recursive
 fi
-cmake -B build -DCMAKE_BUILD_TYPE=Release "$@"
+BUILD_DIR=${BUILD_DIR:-build}
+
+# what this machine offers, and why a backend will be missing - before an
+# hour of compiling, not after (CMake decides the same way)
+if [ "$(uname -s)" = Linux ]; then
+  echo "whisper-dev on $(uname -s) $(uname -m), glibc $(ldd --version 2>/dev/null | head -n 1 | sed 's/.* //')"
+  NVCC=$(command -v nvcc || true)
+  [ -z "$NVCC" ] && [ -x /usr/local/cuda/bin/nvcc ] && NVCC=/usr/local/cuda/bin/nvcc
+  if [ -n "$NVCC" ]; then
+    echo "  CUDA:   $("$NVCC" --version | sed -n 's/.*release \([0-9.]*\).*/\1/p') ($NVCC)"
+  else
+    echo "  CUDA:   not found (no nvcc on PATH or in /usr/local/cuda/bin)"
+  fi
+  if [ -n "$VULKAN_SDK" ]; then
+    echo "  Vulkan: SDK $VULKAN_SDK"
+  elif command -v glslc > /dev/null 2>&1; then
+    echo "  Vulkan: glslc $(command -v glslc) (distribution packages)"
+  else
+    echo "  Vulkan: not found (VULKAN_SDK not set: source the LunarG SDK's setup-env.sh; no glslc on PATH)"
+  fi
+  ROCM=${ROCM_PATH:-/opt/rocm}
+  if [ -x "$ROCM/bin/hipconfig" ]; then
+    echo "  HIP:    ROCm $("$ROCM/bin/hipconfig" --version 2>/dev/null | head -n 1) ($ROCM)"
+  else
+    echo "  HIP:    not found (no $ROCM/bin/hipconfig - ROCm not installed, or set ROCM_PATH)"
+  fi
+  if command -v patchelf > /dev/null 2>&1; then
+    echo "  patchelf: $(command -v patchelf)"
+  else
+    echo "  patchelf: not found (needed to bundle the CUDA / ROCm runtimes)"
+  fi
+fi
+
+cmake -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release "$@"
 # "-j" alone means unlimited jobs with make and can exhaust memory: one per CPU
-cmake --build build --config Release -j "${JOBS:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)}"
+cmake --build "$BUILD_DIR" --config Release -j "${JOBS:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)}"
 echo
 echo "Libraries are in $(pwd)/dlls"

@@ -11,7 +11,7 @@
 # Options (cmake -D...):
 #   WHISPER_DEV_CUDA      CUDA backend          Windows: ON (required), else: ON if nvcc found
 #   WHISPER_DEV_VULKAN    Vulkan backend        Windows: ON (required), else: ON if VULKAN_SDK set
-#   WHISPER_DEV_HIP       AMD HIP backend       ON if HIP_PATH (Windows) / ROCM_PATH (Linux) is set
+#   WHISPER_DEV_HIP       AMD HIP backend       ON if HIP_PATH (Windows) / ROCM_PATH or /opt/rocm (Linux)
 #   WHISPER_DEV_HIP_TARGETS  AMD GPU architectures, e.g. "gfx1100;gfx1201"
 #   WHISPER_DEV_BLAS      OpenBLAS backend      OFF (see below)
 #   WHISPER_DEV_OPENVINO  OpenVINO encoder      OFF (see below)
@@ -71,7 +71,9 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "Linux")
     if (DEFINED ENV{VULKAN_SDK} OR _glslc)
         set(_vulkan_default ON)
     endif()
-    if (DEFINED ENV{ROCM_PATH})
+    # ROCm: ROCM_PATH, else where AMD's packages put it (ggml-hip looks
+    # there too) - a forgotten export no longer leaves HIP out silently
+    if (DEFINED ENV{ROCM_PATH} OR EXISTS /opt/rocm/bin/hipconfig)
         set(_hip_default ON)
     endif()
 endif()
