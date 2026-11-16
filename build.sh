@@ -42,6 +42,10 @@ if [ "$(uname -s)" = Linux ]; then
   fi
 fi
 
+# configured afresh every time: CMake keeps an option it once stored
+# (WHISPER_DEV_HIP=OFF from a run before ROCm was installed) even when the
+# SDK is there now. Only the cache goes - compiled objects are reused.
+rm -f "$BUILD_DIR/CMakeCache.txt"
 cmake -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release "$@"
 # "-j" alone means unlimited jobs with make and can exhaust memory: one per CPU
 cmake --build "$BUILD_DIR" --config Release -j "${JOBS:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)}"
