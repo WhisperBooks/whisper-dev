@@ -148,6 +148,23 @@ if (WHISPER_DEV_HIP AND NOT WIN32)
     set(GPU_TARGETS ${WHISPER_DEV_HIP_TARGETS})
 endif()
 
+# Linux / macOS: the libraries find each other in their OWN folder ($ORIGIN /
+# @loader_path, as ffmpeg-dev's do), not through the build tree's absolute
+# path (the default RUNPATH: the folder dlls/ is copied to had no say, and
+# the build machine's path was in every library). The programs in
+# <build>/bin find the libraries there the same way.
+if (NOT WIN32)
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
+    if (APPLE)
+        set(CMAKE_INSTALL_RPATH "@loader_path")
+    else()
+        set(CMAKE_INSTALL_RPATH "$ORIGIN")
+    endif()
+    # source paths in assert messages as whisper.cpp/..., not the build
+    # machine's (C / C++ only: nvcc and hipcc take other options)
+    add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:-ffile-prefix-map=${WHISPER_SRC}/=whisper.cpp/>")
+endif()
+
 add_subdirectory(${WHISPER_SRC} whisper.cpp)
 
 # ---------------------------------------------------------------- collect
@@ -179,6 +196,18 @@ foreach (_t ${GGML_AVAILABLE_BACKENDS})
         list(APPEND _copy_cmds COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${_t}> ${_dest})
     endif()
 endforeach()
+
+# Linux with gcc: OpenMP's runtime (libgomp.so.1, which every ggml-cpu
+# variant NEEDS) next to the libraries, as vcomp140.dll on Windows - Steam's
+# Linux runtime and minimal systems may not have it. Found through $ORIGIN.
+if (CMAKE_SYSTEM_NAME MATCHES "Linux" AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libgomp.so.1
+        OUTPUT_VARIABLE _gomp OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if (_gomp AND EXISTS "${_gomp}" AND IS_ABSOLUTE "${_gomp}")
+        get_filename_component(_gomp "${_gomp}" REALPATH)
+        list(APPEND _copy_cmds COMMAND ${CMAKE_COMMAND} -E copy_if_different ${_gomp} ${_dest}/libgomp.so.1)
+    endif()
+endif()
 
 if (WIN32)
     # CUDA runtime next to ggml-cuda.dll (CUDA 13 keeps it in bin\x64)

@@ -87,7 +87,20 @@ A required SDK that is missing stops the configure step with a message; pass
 | `msvcp140.dll`, `vcruntime140*.dll`, `vcomp140.dll` | MSVC + OpenMP runtime, app-local |
 
 On Linux / macOS the same set as `lib*.so` / `lib*.dylib` (with their
-soname copies, e.g. `libggml.so.0`).
+soname copies, e.g. `libggml.so.0`), plus on Linux with gcc OpenMP's
+runtime `libgomp.so.1` (every `libggml-cpu-*.so` needs it; Steam's Linux
+runtime and minimal systems may not have it). The libraries find each
+other in their own folder (RUNPATH `$ORIGIN`, macOS `@loader_path`), so
+the folder can go anywhere - next to the program, or a `lib` folder
+named by `TWhisper.LibraryPath` - and they carry no path of the build
+machine (source paths in assert messages start at `whisper.cpp/`).
+
+On Linux, which backends get built depends on what is installed: CUDA
+when `nvcc` is found, Vulkan when `glslc` (or `VULKAN_SDK`) is, HIP when
+`ROCM_PATH` is set. SteamOS / the Steam Deck / an AMD Steam Machine: build
+on a desktop Linux of the same CPU family with Vulkan (Ubuntu:
+`sudo apt install libvulkan-dev glslc spirv-headers`) and, for HIP, ROCm;
+the CPU variants cover every x86-64 CPU.
 
 On Windows, HIP is built in a second tree (`build/hip`) with the HIP SDK's own
 clang, because that compiler cannot share a tree with MSVC, which CUDA needs.
