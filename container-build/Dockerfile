@@ -44,6 +44,18 @@ RUN mkdir -p /opt/vulkan && cd /opt/vulkan \
        fi \
     && curl -fsSL "$URL" | tar xJ \
     && ln -s "$(ls -d /opt/vulkan/*/x86_64 | head -n 1)" /opt/vulkan/current
+# The Vulkan loader to link against (libvulkan.so): LunarG's tarball may
+# hold it only as libvulkan.so.1, or not at all (1.4.363: CMake found the
+# headers but no library). A missing plain name gets a link; no loader at
+# all: Ubuntu's libvulkan-dev. Only the link step uses it - at run time
+# libggml-vulkan.so takes the target system's loader (libvulkan.so.1, part
+# of every Vulkan driver install), and the loader's ABI does not change.
+RUN cd /opt/vulkan/current/lib 2>/dev/null \
+      && if [ ! -e libvulkan.so ] && [ -e libvulkan.so.1 ]; then ln -s libvulkan.so.1 libvulkan.so; fi; \
+    if [ ! -e /opt/vulkan/current/lib/libvulkan.so ]; then \
+      apt-get update && apt-get install -y --no-install-recommends libvulkan-dev \
+      && rm -rf /var/lib/apt/lists/*; \
+    fi
 ENV VULKAN_SDK=/opt/vulkan/current
 ENV PATH=$VULKAN_SDK/bin:$PATH
 
