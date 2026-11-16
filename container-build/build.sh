@@ -38,7 +38,11 @@ fi
 # compiling - a missing one stops here (ALLOW_MISSING=1 builds without it)
 if [ "$REPO" = "$(cd "$HERE/.." && pwd)" ] && [ -z "$ALLOW_MISSING" ]; then
   MISSING=
-  "$DOCKER" run --rm "$IMAGE" test -x /opt/rocm/bin/hipconfig || MISSING="$MISSING ROCm(HIP)"
+  # ROCm: the compiler AND the HIP CMake package (ROCm 7.x installs them
+  # separately, and without hip-lang CMake stops after the CUDA setup)
+  "$DOCKER" run --rm "$IMAGE" sh -c 'test -x /opt/rocm/bin/hipconfig \
+    && find -L /opt/rocm -maxdepth 6 -name hip-lang-config.cmake | grep -q .' \
+    || MISSING="$MISSING ROCm(HIP-dev)"
   "$DOCKER" run --rm "$IMAGE" test -x /usr/local/cuda/bin/nvcc || MISSING="$MISSING CUDA"
   "$DOCKER" run --rm "$IMAGE" sh -c 'test -x "$VULKAN_SDK/bin/glslc"' || MISSING="$MISSING Vulkan"
   if [ -n "$MISSING" ]; then

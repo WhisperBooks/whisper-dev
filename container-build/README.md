@@ -207,6 +207,12 @@ To start afresh (a new ROCm, say): `docker rmi whisper-dev-build:ubuntu22.04`.
   repository's `build.sh` is older than the container support and reused
   the host's `build/` folder: `git pull` in it (ffmpeg-dev 3709326 or
   later), then build again.
+- `does not contain the HIP runtime CMake package`, with no
+  `hip-lang-config.cmake` anywhere in the image - ROCm 7.x's `rocm` use
+  case installs no development files; the Dockerfile's last step adds them
+  (`amdrocm-core-dev`, `-runtime-dev`, `-blas-dev`, `-hipblas-common-dev`).
+  An image built before that step: run `container-build/build.sh` again,
+  only the new step is built.
 - `does not contain the HIP runtime CMake package` (whisper-dev) - ROCm
   7.x keeps its compiler in a folder of its own (`/opt/rocm/core-NN`), and
   CMake looked for HIP there. whisper-dev finds the right folder itself

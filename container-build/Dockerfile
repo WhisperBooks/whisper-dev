@@ -84,3 +84,23 @@ RUN DEB=$(ls /ctx/amdgpu-install_*.deb 2>/dev/null | head -n 1); \
     else \
       echo "No amdgpu-install package: no ROCm in this image"; \
     fi
+
+# ROCm 7.x packaging (amdrocm-*): the "rocm" use case installs the HIP
+# runtime, the compiler and the GPU kernels, but none of the development
+# files - no hip-lang / hip CMake packages, no hipBLAS / rocBLAS headers -
+# so CMake cannot build ggml-hip. Added in a step of its own, so the ROCm
+# step above stays cached. The version suffix (10.1) is read from the
+# installed runtime, so a newer amdgpu-install picks its own.
+RUN if ls /opt/rocm/bin/hipconfig >/dev/null 2>&1; then \
+      V=$(dpkg-query -W -f '${Package}\n' 'amdrocm-runtime*' 2>/dev/null \
+          | sed -n 's/^amdrocm-runtime\([0-9][0-9.]*\)$/\1/p' | head -n 1); \
+      if [ -n "$V" ]; then \
+        apt-get update \
+        && apt-get install -y --no-install-recommends \
+             amdrocm-core-dev$V amdrocm-runtime-dev$V \
+             amdrocm-blas-dev$V amdrocm-hipblas-common-dev$V \
+        && rm -rf /var/lib/apt/lists/*; \
+      else \
+        echo "ROCm without amdrocm-runtime packages: older packaging, dev files came with it"; \
+      fi; \
+    fi
