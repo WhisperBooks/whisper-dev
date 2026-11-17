@@ -10,7 +10,9 @@
 #   cuBLAS, cuBLASLt; ROCm's amdhip64, hipBLAS, rocBLAS, HSA, comgr, ...)
 #   is copied into DEST under the name it is needed by (the soname).
 # - Their RUNPATH is set to $ORIGIN (patchelf), so they find each other in
-#   DEST like whisper-dev's own libraries; without patchelf a warning.
+#   DEST like whisper-dev's own libraries; without patchelf, or when it
+#   fails on a file, the build stops (the folder would only work where
+#   the SDKs are installed).
 # - rocBLAS / hipBLASLt kernel files go to DEST/rocblas/library and
 #   DEST/hipblaslt/library: only those for HIP_TARGETS, and the files for
 #   no particular GPU.
@@ -19,7 +21,8 @@
 #   bundled ones need are listed, to check on the target systems.
 # - Licences: each bundled library's (and libgomp's) Debian copyright file
 #   and NVIDIA's EULA.txt into DEST/licences/ (CUDA-*, ROCm-*, GCC-*), for
-#   whoever ships the folder (dpkg needed: the container has it).
+#   whoever ships the folder. The copyright files need dpkg (the container
+#   has it); the EULA and ROCm's own texts are copied without it.
 # MODULES (optional) replaces the two backends (for testing the script).
 cmake_minimum_required(VERSION 3.21)
 
@@ -160,12 +163,14 @@ if (_patchelf)
     foreach (_f ${_patch})
         execute_process(COMMAND "${_patchelf}" --set-rpath "$ORIGIN" "${_f}" RESULT_VARIABLE _r)
         if (NOT _r EQUAL 0)
-            message(WARNING "whisper-dev: patchelf failed on ${_f}")
+            message(FATAL_ERROR "whisper-dev: patchelf failed on ${_f} - the folder would not work on a "
+                "system without the SDKs")
         endif()
     endforeach()
-elseif (_copied)
-    message(WARNING "whisper-dev: patchelf not found - the bundled GPU runtime libraries keep their own "
-        "RUNPATH and may not find each other on a system without the SDK (install patchelf)")
+elseif (_patch)
+    message(FATAL_ERROR "whisper-dev: patchelf not found - the GPU backends and their bundled runtime "
+        "libraries cannot be given RUNPATH $ORIGIN (install patchelf, or configure with "
+        "-DWHISPER_DEV_BUNDLE_RUNTIMES=OFF)")
 endif()
 
 list(LENGTH _copied _n_copied)
@@ -213,12 +218,21 @@ endforeach()
 if (EXISTS "${DEST}/libgomp.so.1")
     list(APPEND _lic_names libgomp.so.1)
 endif()
-if (_dpkg AND _lic_names)
+if (_lic_names)
     file(MAKE_DIRECTORY "${DEST}/licences")
     set(_lic_count 0)
     set(_no_pkg)
     set(_seen)
-    foreach (_n ${_lic_names})
+    # the packages' copyright files: dpkg knows which package a file is of
+    if (NOT _dpkg)
+        message(WARNING "whisper-dev: dpkg not found - the bundled libraries' Debian copyright files were "
+            "not collected (build in container-build/ to have them); NVIDIA's EULA and ROCm's own licence "
+            "texts are copied all the same")
+        set(_lic_dpkg_names)
+    else()
+        set(_lic_dpkg_names ${_lic_names})
+    endif()
+    foreach (_n ${_lic_dpkg_names})
         execute_process(COMMAND "${_dpkg}" -S "*/${_n}" OUTPUT_VARIABLE _out ERROR_QUIET RESULT_VARIABLE _r)
         if (NOT _r EQUAL 0 OR _out STREQUAL "")
             list(APPEND _no_pkg "${_n}")
@@ -321,7 +335,4 @@ if (_dpkg AND _lic_names)
         list(JOIN _no_pkg " " _no_pkg)
         message(WARNING "whisper-dev: no package (so no licence file) found for: ${_no_pkg}")
     endif()
-elseif (_lic_names)
-    message(WARNING "whisper-dev: dpkg not found - the bundled libraries' licence files were not collected "
-        "(build in container-build/ to have them)")
 endif()

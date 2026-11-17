@@ -112,7 +112,9 @@ DOCKER=podman container-build/build.sh ../ffmpeg-dev
 ```
 
 The script then keeps your user id inside the container
-(`--userns=keep-id`), so the built files belong to you.
+(`--userns=keep-id`), so the built files belong to you. It asks the
+program what it is (`--version`), so a `docker` command that is really
+Podman (the `podman-docker` package) is handled the same way.
 
 ### Windows
 
@@ -136,7 +138,8 @@ container-build/build.sh
 
 The first run builds the image: CMake, CUDA, the Vulkan SDK and ROCm. That is a download of several GB and can take an
 hour; later runs reuse the image (a `.deb` put here later builds the
-ROCm step once more). The repository is mounted into the container at the same path it has on
+ROCm step once more; nothing else in this folder is part of the image -
+`.dockerignore` - so editing a file here does not). The repository is mounted into the container at the same path it has on
 your machine, so the results land where a normal build puts them:
 
 - ffmpeg-dev: `dlls/linux-x64/` (libraries, licence texts, BUILD-INFO.txt)
@@ -168,6 +171,19 @@ how many CUDA / ROCm runtime libraries and kernel files it bundled, and
 which system libraries those still need.
 
 ## Checking the result
+
+What the folder holds - the build, the glibc it was built against (2.35
+from the container), the backends:
+
+```
+cat dlls/BUILD-INFO.txt
+```
+
+No path of the build machine in the libraries (prints nothing):
+
+```
+strings dlls/libggml-cuda.so dlls/libggml-hip.so | grep "$HOME"
+```
 
 The newest glibc a library needs - must be 2.35 or lower:
 

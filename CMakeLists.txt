@@ -18,6 +18,7 @@
 #   CUDA_ALL              CUDA archs 50;75;86;89;120 instead of ggml's default list
 #                         (75;86;89;120 with CUDA 13+, which has no sm_50)
 #   WHISPER_DEV_BUNDLE_RUNTIMES  Linux: CUDA / ROCm runtimes into dlls/  ON
+#   WHISPER_DEV_CLEAN_DLLS  empty dlls/ of earlier builds' libraries first  ON
 #
 # The CPU backend is always built in every variant the platform supports
 # (GGML_CPU_ALL_VARIANTS); ggml picks the best one for the machine at run
@@ -85,6 +86,7 @@ option(WHISPER_DEV_BLAS     "Build the OpenBLAS backend (always used when presen
 option(WHISPER_DEV_OPENVINO "Build whisper with the OpenVINO encoder (needs OpenVINO at run time)" OFF)
 option(CUDA_ALL             "CUDA architectures 50;75;86;89;120 instead of ggml's default" OFF)
 option(WHISPER_DEV_BUNDLE_RUNTIMES "Linux: copy the CUDA / ROCm runtime libraries the GPU backends need into dlls/" ON)
+option(WHISPER_DEV_CLEAN_DLLS "Remove the libraries of earlier builds from dlls/ before collecting this build's" ON)
 set(WHISPER_DEV_HIP_TARGETS "gfx1030;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201" CACHE STRING
     "AMD GPU architectures for HIP (only ones the HIP SDK has rocBLAS kernels for)")
 
@@ -138,19 +140,23 @@ if (WHISPER_DEV_CUDA)
         set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -allow-unsupported-compiler")
         message(STATUS "whisper-dev: MSVC ${MSVC_VERSION} - passing -allow-unsupported-compiler to nvcc")
     endif()
+    # the toolkit's version (for CUDA_ALL below and dlls/BUILD-INFO.txt)
+    set(_nvcc_ver "")
+    set(_nvcc_release "")
+    set(_nvcc_exe "${CMAKE_CUDA_COMPILER}")
+    if (NOT _nvcc_exe AND DEFINED ENV{CUDA_PATH})
+        set(_nvcc_exe "$ENV{CUDA_PATH}/bin/nvcc")
+    endif()
+    if (_nvcc_exe)
+        execute_process(COMMAND "${_nvcc_exe}" --version OUTPUT_VARIABLE _nvcc_out ERROR_QUIET)
+        if (_nvcc_out MATCHES "release ([0-9]+)\\.([0-9]+)")
+            set(_nvcc_ver "${CMAKE_MATCH_1}")
+            set(_nvcc_release "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}")
+        endif()
+    endif()
     if (CUDA_ALL)
         # CUDA 13 dropped Maxwell / Pascal / Volta (sm_50 - sm_72): 50 only
         # with an older toolkit (ggml's own default list does the same)
-        set(_nvcc_ver "")
-        set(_nvcc_exe "${CMAKE_CUDA_COMPILER}")
-        if (NOT _nvcc_exe AND DEFINED ENV{CUDA_PATH})
-            set(_nvcc_exe "$ENV{CUDA_PATH}/bin/nvcc")
-        endif()
-        if (_nvcc_exe)
-            execute_process(COMMAND "${_nvcc_exe}" --version OUTPUT_VARIABLE _nvcc_out ERROR_QUIET)
-            string(REGEX MATCH "release ([0-9]+)\\.([0-9]+)" _m "${_nvcc_out}")
-            set(_nvcc_ver "${CMAKE_MATCH_1}")
-        endif()
         if (_nvcc_ver AND _nvcc_ver GREATER_EQUAL 13)
             set(CMAKE_CUDA_ARCHITECTURES "75;86;89;120")
         else()
@@ -212,8 +218,15 @@ if (NOT WIN32)
         set(CMAKE_INSTALL_RPATH "$ORIGIN")
     endif()
     # source paths in assert messages as whisper.cpp/..., not the build
-    # machine's (C / C++ only: nvcc and hipcc take other options)
-    add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:-ffile-prefix-map=${WHISPER_SRC}/=whisper.cpp/>")
+    # machine's - in the GPU backends too (the container mounts the
+    # repository at its host path, so libggml-cuda.so / libggml-hip.so
+    # carried the builder's folder). HIP sources are compiled by clang,
+    # which takes the option as it is; nvcc hands it to the host compiler
+    # (-Xcompiler=, as CMake does for -fPIC), which also preprocesses.
+    # Check: strings dlls/libggml-cuda.so | grep "$HOME" prints nothing.
+    add_compile_options(
+        "$<$<COMPILE_LANGUAGE:C,CXX,HIP>:-ffile-prefix-map=${WHISPER_SRC}/=whisper.cpp/>"
+        "$<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-ffile-prefix-map=${WHISPER_SRC}/=whisper.cpp/>")
 endif()
 
 add_subdirectory(${WHISPER_SRC} whisper.cpp)
@@ -222,7 +235,18 @@ add_subdirectory(${WHISPER_SRC} whisper.cpp)
 # whisper.cpp writes its libraries to <build>/bin whatever a parent sets, so
 # the 'dlls' target copies them (and the runtimes they need) to DLL_DIR.
 set(_dest "$<IF:$<CONFIG:Debug>,${DLL_DIR}/debug,${DLL_DIR}>")
-set(_copy_cmds COMMAND ${CMAKE_COMMAND} -E make_directory ${_dest})
+set(_copy_cmds)
+# first out with what earlier builds left there: a backend since turned
+# off, runtimes under an older soname, kernels of GPUs no longer targeted -
+# ggml loads every backend in the folder and the folder is what gets
+# shipped. It also makes the bundler take the runtimes from the SDK again
+# (a copy already in dlls/ was found first and kept: a toolkit update with
+# the same soname left the old cuBLAS beside the new backend).
+if (WHISPER_DEV_CLEAN_DLLS)
+    list(APPEND _copy_cmds COMMAND ${CMAKE_COMMAND} "-DDEST=${_dest}"
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/clean_dlls.cmake)
+endif()
+list(APPEND _copy_cmds COMMAND ${CMAKE_COMMAND} -E make_directory ${_dest})
 set(_copy_deps)
 
 # shared libraries: the file, plus on Linux / macOS the soname and the plain
@@ -289,10 +313,14 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux" AND WHISPER_DEV_BUNDLE_RUNTIMES AND (WHISP
     string(REPLACE ";" "|" _targets_arg "${WHISPER_DEV_HIP_TARGETS}")
     list(APPEND _copy_cmds COMMAND ${CMAKE_COMMAND} "-DDEST=${_dest}" "-DROOTS=${_roots_arg}"
         "-DHIP_TARGETS=${_targets_arg}" -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/bundle_linux.cmake)
+    # without patchelf the folder looks complete and fails only on a system
+    # without the SDKs (libggml-hip.so has no RUNPATH, the runtimes do not
+    # find each other): stop now, not after an hour of compiling
     find_program(_patchelf_check patchelf)
     if (NOT _patchelf_check)
-        message(WARNING "whisper-dev: patchelf not found - the bundled CUDA / ROCm libraries cannot be given "
-            "RUNPATH $ORIGIN (build patchelf from github.com/NixOS/patchelf, or install it)")
+        message(FATAL_ERROR "patchelf not found: the bundled CUDA / ROCm libraries cannot be given RUNPATH "
+            "$ORIGIN. Install it (distribution package, or github.com/NixOS/patchelf), or configure with "
+            "-DWHISPER_DEV_BUNDLE_RUNTIMES=OFF (a folder for systems that have the SDKs installed)")
     endif()
 endif()
 
@@ -324,6 +352,53 @@ if (WIN32)
         endif()
     endif()
 endif()
+
+# what this folder is: where and from what it was built (a host build
+# over a container build's dlls/ looks the same but needs the host's
+# glibc). Versions only - no path, user or machine name.
+set(_info "whisper-dev libraries\n")
+string(TIMESTAMP _now "%Y-%m-%d %H:%M UTC" UTC)
+string(APPEND _info "Configured: ${_now}\n")
+string(APPEND _info "System: ${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_PROCESSOR}")
+if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+    execute_process(COMMAND getconf GNU_LIBC_VERSION OUTPUT_VARIABLE _glibc
+        OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+    if (_glibc)
+        string(APPEND _info ", built against ${_glibc} (a system with an older one may not load them)")
+    endif()
+endif()
+string(APPEND _info "\nCompiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}\n")
+find_package(Git QUIET)
+if (GIT_FOUND)
+    execute_process(COMMAND ${GIT_EXECUTABLE} -C ${WHISPER_SRC} rev-parse HEAD OUTPUT_VARIABLE _wcommit
+        OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+    if (_wcommit)
+        string(APPEND _info "whisper.cpp: ${_wcommit}\n")
+    endif()
+endif()
+string(APPEND _info "CPU: all variants ${GGML_CPU_ALL_VARIANTS}\n")
+if (WHISPER_DEV_CUDA)
+    if (CMAKE_CUDA_ARCHITECTURES)
+        set(_archs "${CMAKE_CUDA_ARCHITECTURES}")
+    else()
+        set(_archs "ggml's default list")
+    endif()
+    string(APPEND _info "CUDA: toolkit ${_nvcc_release}, architectures ${_archs}\n")
+else()
+    string(APPEND _info "CUDA: not built\n")
+endif()
+string(APPEND _info "Vulkan: ${WHISPER_DEV_VULKAN}\n")
+if (WHISPER_DEV_HIP)
+    string(APPEND _info "HIP: targets ${WHISPER_DEV_HIP_TARGETS}\n")
+else()
+    string(APPEND _info "HIP: not built\n")
+endif()
+string(APPEND _info "BLAS: ${WHISPER_DEV_BLAS}, OpenVINO: ${WHISPER_DEV_OPENVINO}\n")
+if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+    string(APPEND _info "GPU runtimes bundled: ${WHISPER_DEV_BUNDLE_RUNTIMES}\n")
+endif()
+file(WRITE ${CMAKE_BINARY_DIR}/BUILD-INFO.txt "${_info}")
+list(APPEND _copy_cmds COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/BUILD-INFO.txt ${_dest})
 
 add_custom_target(dlls ALL ${_copy_cmds}
     COMMENT "Collecting the whisper.cpp libraries in ${DLL_DIR}"

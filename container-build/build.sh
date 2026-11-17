@@ -30,9 +30,11 @@ if ! command -v "$DOCKER" > /dev/null 2>&1; then
   echo "$DOCKER is not installed: see container-build/README.md, \"Installing Docker or Podman\""
   exit 1
 fi
+# the image (cached after the first time: several GB to download then).
 # ROCm: the Dockerfile fetches AMD's amdgpu-install for Ubuntu 22.04 itself
 # (AMDGPU_INSTALL_URL), or takes an amdgpu-install_*.deb put in this folder
-# the image (cached after the first time: several GB to download then)
+# (.dockerignore keeps everything else out of the build's context, so an
+# edit to a file here does not run the ROCm steps again)
 "$DOCKER" build -t "$IMAGE" "$HERE"
 # whisper-dev only: the GPU SDKs must be in the image BEFORE an hour of
 # compiling - a missing one stops here (ALLOW_MISSING=1 builds without it)
@@ -63,11 +65,14 @@ TTY=
 [ -t 1 ] && TTY=-t
 # as the host user, so dlls/ and the build tree belong to you: Docker runs
 # as your user and group ids; rootless Podman maps container ids to other
-# ids on the host, so it keeps yours with --userns=keep-id instead
-case $(basename "$DOCKER") in
-  podman*) AS_USER="--userns=keep-id" ;;
-  *) AS_USER="-u $(id -u):$(id -g)" ;;
-esac
+# ids on the host, so it keeps yours with --userns=keep-id instead. Asked
+# of the program, not read from its name: "docker" can be Podman (the
+# podman-docker package)
+if "$DOCKER" --version 2>/dev/null | grep -qi podman; then
+  AS_USER="--userns=keep-id"
+else
+  AS_USER="-u $(id -u):$(id -g)"
+fi
 # shellcheck disable=SC2086
 exec "$DOCKER" run --rm $TTY $AS_USER -e HOME=/tmp -e JOBS \
   -e BUILD_DIR=build-container -e BUILD_ROOT=build-container \

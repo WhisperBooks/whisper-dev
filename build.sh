@@ -2,8 +2,10 @@
 # whisper-dev: builds the whisper.cpp libraries and collects them in dlls/
 # Extra arguments go to the configure step, e.g.
 #   ./build.sh -DWHISPER_DEV_CUDA=OFF
-# BUILD_DIR=folder builds there instead of build/ (build-in-container.sh
-# uses build-container/, so the two trees never mix).
+# BUILD_DIR=folder builds there instead of build/ (container-build/build.sh
+# uses build-container/, so the two trees never mix). Both collect in
+# dlls/, each build emptying it of the one before: dlls/BUILD-INFO.txt
+# says which build is there.
 set -e
 cd "$(dirname "$0")"
 if [ ! -f whisper.cpp/include/whisper.h ]; then
@@ -38,7 +40,8 @@ if [ "$(uname -s)" = Linux ]; then
   if command -v patchelf > /dev/null 2>&1; then
     echo "  patchelf: $(command -v patchelf)"
   else
-    echo "  patchelf: not found (needed to bundle the CUDA / ROCm runtimes)"
+    echo "  patchelf: not found (needed to bundle the CUDA / ROCm runtimes: with CUDA or ROCm"
+    echo "            here the configure step stops - install it, or -DWHISPER_DEV_BUNDLE_RUNTIMES=OFF)"
   fi
 fi
 

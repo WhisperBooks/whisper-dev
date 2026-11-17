@@ -1,0 +1,7 @@
+# The image build's context is this folder, and the Dockerfile copies it
+# (COPY . /ctx) to pick up an amdgpu-install package put here. Only that
+# package may be part of it: with README.md, build.sh and the rest in the
+# context, any edit to one of them made Docker run the ROCm steps again
+# (several GB). The Dockerfile itself is always sent.
+*
+!amdgpu-install_*.deb
