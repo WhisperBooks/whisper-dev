@@ -23,7 +23,7 @@ history of whisper-dev zips 01 - 20 is there (its session 7).
 - whisper.cpp is a submodule pinned to a commit: never `--remote`.
 - dlls/ is build output: only its .gitignore and README.md are tracked.
 
-Last number used: 21.
+Last number used: 22.
 
 ## What can be tested without the SDKs
 
@@ -35,6 +35,28 @@ Last number used: 21.
 - `sh -n` on the scripts. Not testable without Docker and the SDKs: the
   image, CUDA / HIP compiles, real bundling - the owner's container build
   is their test.
+
+## Zip 22 (on top of zip 21): Core ML on macOS
+Owner, 2026-11-18 (Epubunum session 9; M4 Mac mini, base.en Night Watch
+55x on Metal): "can we have coreml for deployment when I build?"
+- CMakeLists.txt: WHISPER_DEV_COREML (ON on APPLE, a FATAL_ERROR
+  elsewhere) -> WHISPER_COREML and WHISPER_COREML_ALLOW_FALLBACK (a model
+  without its -encoder.mlmodelc loads and runs on Metal instead of
+  failing); whisper.coreml in the copied targets (libwhisper.coreml.dylib,
+  linked by libwhisper; @loader_path as the others); the configure line
+  and BUILD-INFO.txt say Core ML on Apple.
+- README: the macOS Core ML row and paragraph; macOS backends are lib*.so
+  (corrected - ggml's backend modules carry .so on every system but
+  Windows).
+TESTED here: configure on Linux unchanged (CPU only); -DWHISPER_DEV_COREML=ON
+on Linux stops with the message. NOT BUILT on a Mac here. TO TEST on the
+Mac: ./build.sh -> "Core ML encoder ON"; dlls/ has libwhisper.coreml.dylib;
+otool -L dlls/libwhisper.dylib names @rpath/libwhisper.coreml.dylib (or
+@loader_path); a model with its .mlmodelc logs "Core ML model loaded",
+one without runs on Metal.
+The encoders: huggingface.co/ggerganov/whisper.cpp, ggml-<name>-encoder.
+mlmodelc.zip for tiny .. large-v3 and large-v3-turbo (EpubBuilder
+downloads them with the models - Epubunum zip 102).
 
 ## Zip 21 (on top of 9fa21dc = zip 20): review fixes
 A code review by reading of 9fa21dc (owner, 2026-11-16: "Do the same for

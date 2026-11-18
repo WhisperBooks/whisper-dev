@@ -32,6 +32,7 @@ generated from.
 | CMake | 3.21+ | 3.21+ | 3.21+ |
 | CUDA | CUDA Toolkit (`CUDA_PATH`), required | used when `nvcc` is found | - |
 | Vulkan | Vulkan SDK (`VULKAN_SDK`), required | Vulkan SDK, or the distribution's packages (Ubuntu: `libvulkan-dev glslc spirv-headers`) | (Metal is built in) |
+| Core ML | - | - | built in (`WHISPER_DEV_COREML`, ON; the Xcode command line tools have the framework) |
 | AMD HIP | HIP SDK (`HIP_PATH`) + Ninja, optional | ROCm (`ROCM_PATH`), optional | - |
 
 On Windows `build.bat` works from any prompt: it sets up the x64 Visual
@@ -102,7 +103,10 @@ On Windows:
 | `msvcp140.dll`, `vcruntime140*.dll`, `vcomp140.dll` | MSVC + OpenMP runtime, app-local |
 
 On Linux / macOS the same set as `lib*.so` / `lib*.dylib` (with their
-soname copies, e.g. `libggml.so.0`), plus on Linux with gcc OpenMP's
+soname copies, e.g. `libggml.so.0`) - the backends are `lib*.so` on macOS
+too (`libggml-cpu-apple_m4.so`, `libggml-metal.so`: ggml loads its
+backend modules by that name everywhere but Windows); on macOS also
+`libwhisper.coreml.dylib` (Core ML, below), plus on Linux with gcc OpenMP's
 runtime `libgomp.so.1` (every `libggml-cpu-*.so` needs it; Steam's Linux
 runtime and minimal systems may not have it). The libraries find each
 other in their own folder (RUNPATH `$ORIGIN`, macOS `@loader_path`), so
@@ -111,6 +115,15 @@ named by `TWhisper.LibraryPath` - and they carry no path of the build
 machine (source paths in assert messages start at `whisper.cpp/`, in the
 CUDA and HIP backends too; `strings dlls/libggml-cuda.so | grep "$HOME"`
 prints nothing).
+
+On macOS whisper is built with **Core ML** (`WHISPER_DEV_COREML`, ON by
+default) and its fallback: a model's encoder runs through Core ML (the
+Neural Engine) when its `ggml-<name>-encoder.mlmodelc` folder is beside the
+`.bin`, and on Metal like the rest when it is not - so models without one
+work as before. whisper.cpp's model repository on Hugging Face has the
+encoders ready-made as `ggml-<name>-encoder.mlmodelc.zip` (unzip beside the
+model). The first load of an encoder on a machine takes a while: macOS
+compiles it for the device. `-DWHISPER_DEV_COREML=OFF` builds without it.
 
 On Linux, which backends get built depends on what is installed: CUDA
 when `nvcc` is found, Vulkan when `glslc` (or `VULKAN_SDK`) is, HIP when

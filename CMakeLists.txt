@@ -15,6 +15,7 @@
 #   WHISPER_DEV_HIP_TARGETS  AMD GPU architectures, e.g. "gfx1100;gfx1201"
 #   WHISPER_DEV_BLAS      OpenBLAS backend      OFF (see below)
 #   WHISPER_DEV_OPENVINO  OpenVINO encoder      OFF (see below)
+#   WHISPER_DEV_COREML    Core ML encoder       macOS: ON (see below), else not available
 #   CUDA_ALL              CUDA archs 50;75;86;89;120 instead of ggml's default list
 #                         (75;86;89;120 with CUDA 13+, which has no sm_50)
 #   WHISPER_DEV_BUNDLE_RUNTIMES  Linux: CUDA / ROCm runtimes into dlls/  ON
@@ -25,6 +26,14 @@
 # time. GPU backends whose runtime is missing on a machine are skipped there.
 # Missing SDKs for a required backend stop the configure step with a message
 # instead of silently building less.
+#
+# Core ML (macOS): the encoder runs through Apple's Core ML (Neural Engine /
+# GPU), the decoder on Metal. whisper.coreml is a library of its own
+# (libwhisper.coreml.dylib, collected in dlls/); a model uses Core ML only
+# when its ggml-<name>-encoder.mlmodelc folder is beside the .bin - with
+# WHISPER_COREML_ALLOW_FALLBACK (always set here) a model without one runs
+# on Metal as before instead of failing to load. The first load of an
+# encoder on a machine is slow (macOS compiles it for the device).
 #
 # BLAS is off by default: whisper.cpp ALWAYS uses an accelerator backend
 # that is present, so a ggml-blas library in the folder would take the
@@ -84,6 +93,12 @@ option(WHISPER_DEV_VULKAN   "Build the Vulkan backend" ${_vulkan_default})
 option(WHISPER_DEV_HIP      "Build the AMD HIP backend" ${_hip_default})
 option(WHISPER_DEV_BLAS     "Build the OpenBLAS backend (always used when present)" OFF)
 option(WHISPER_DEV_OPENVINO "Build whisper with the OpenVINO encoder (needs OpenVINO at run time)" OFF)
+if (APPLE)
+    set(_coreml_default ON)
+else()
+    set(_coreml_default OFF)
+endif()
+option(WHISPER_DEV_COREML   "macOS: build whisper with the Core ML encoder (falls back to Metal without an .mlmodelc)" ${_coreml_default})
 option(CUDA_ALL             "CUDA architectures 50;75;86;89;120 instead of ggml's default" OFF)
 option(WHISPER_DEV_BUNDLE_RUNTIMES "Linux: copy the CUDA / ROCm runtime libraries the GPU backends need into dlls/" ON)
 option(WHISPER_DEV_CLEAN_DLLS "Remove the libraries of earlier builds from dlls/ before collecting this build's" ON)
@@ -91,6 +106,9 @@ set(WHISPER_DEV_HIP_TARGETS "gfx1030;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201" CA
     "AMD GPU architectures for HIP (only ones the HIP SDK has rocBLAS kernels for)")
 
 # ---------------------------------------------------------------- SDK checks
+if (WHISPER_DEV_COREML AND NOT APPLE)
+    message(FATAL_ERROR "Core ML is macOS only: configure with -DWHISPER_DEV_COREML=OFF")
+endif()
 if (WHISPER_DEV_CUDA AND WIN32 AND NOT DEFINED ENV{CUDA_PATH})
     message(FATAL_ERROR "CUDA_PATH is not set: install the CUDA Toolkit or configure with -DWHISPER_DEV_CUDA=OFF")
 endif()
@@ -119,6 +137,10 @@ set(GGML_CUDA   ${WHISPER_DEV_CUDA})
 set(GGML_VULKAN ${WHISPER_DEV_VULKAN})
 set(GGML_BLAS   ${WHISPER_DEV_BLAS})
 set(WHISPER_OPENVINO ${WHISPER_DEV_OPENVINO})
+# Core ML with the fallback: a model without its -encoder.mlmodelc still
+# loads (on Metal)
+set(WHISPER_COREML ${WHISPER_DEV_COREML})
+set(WHISPER_COREML_ALLOW_FALLBACK ${WHISPER_DEV_COREML})
 if (WHISPER_DEV_BLAS AND NOT GGML_BLAS_VENDOR)
     set(GGML_BLAS_VENDOR "OpenBLAS")
 endif()
@@ -252,7 +274,8 @@ set(_copy_deps)
 # shared libraries: the file, plus on Linux / macOS the soname and the plain
 # name (libggml.so.0 is what the others NEED; libggml.so is what TWhisper
 # looks for first)
-foreach (_t whisper ggml ggml-base)
+# (whisper.coreml: macOS with WHISPER_DEV_COREML - libwhisper needs it)
+foreach (_t whisper ggml ggml-base whisper.coreml)
     if (TARGET ${_t})
         list(APPEND _copy_deps ${_t})
         list(APPEND _copy_cmds COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${_t}> ${_dest})
@@ -394,6 +417,9 @@ else()
     string(APPEND _info "HIP: not built\n")
 endif()
 string(APPEND _info "BLAS: ${WHISPER_DEV_BLAS}, OpenVINO: ${WHISPER_DEV_OPENVINO}\n")
+if (APPLE)
+    string(APPEND _info "Core ML: ${WHISPER_DEV_COREML} (with the fallback to Metal)\n")
+endif()
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
     string(APPEND _info "GPU runtimes bundled: ${WHISPER_DEV_BUNDLE_RUNTIMES}\n")
 endif()
@@ -465,3 +491,6 @@ endif()
 message(STATUS "whisper-dev backends: CPU (all variants: ${GGML_CPU_ALL_VARIANTS}), CUDA ${WHISPER_DEV_CUDA}, "
                "Vulkan ${WHISPER_DEV_VULKAN}, HIP ${WHISPER_DEV_HIP}, BLAS ${WHISPER_DEV_BLAS}, "
                "OpenVINO ${WHISPER_DEV_OPENVINO}")
+if (APPLE)
+    message(STATUS "whisper-dev: Metal built in; Core ML encoder ${WHISPER_DEV_COREML} (fallback to Metal)")
+endif()
