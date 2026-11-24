@@ -74,7 +74,7 @@ Extra arguments to `build.bat` / `build.sh` go to the configure step:
 | `WHISPER_DEV_BLAS` | OFF | OpenBLAS backend (whisper.cpp always uses one that is present, so it takes the choice away) |
 | `WHISPER_DEV_OPENVINO` | OFF | OpenVINO encoder (links into whisper, which then needs OpenVINO everywhere) |
 | `WHISPER_DEV_BUNDLE_RUNTIMES` | ON | Linux: the CUDA / ROCm runtime libraries into `dlls/` (needs `patchelf`; see below) |
-| `WHISPER_DEV_CLEAN_DLLS` | ON | every build first removes the libraries of earlier builds from `dlls/` |
+| `WHISPER_DEV_CLEAN_DLLS` | ON | every build removes the libraries of earlier builds from `dlls/`: `build.sh` / `build.bat` as soon as the configure step is through (a build that stops leaves the folder empty, not the old set), and again before the new ones are copied |
 
 A required SDK that is missing stops the configure step with a message; pass
 `-DWHISPER_DEV_<X>=OFF` to build without that backend.

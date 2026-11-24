@@ -50,6 +50,15 @@ fi
 # SDK is there now. Only the cache goes - compiled objects are reused.
 rm -f "$BUILD_DIR/CMakeCache.txt"
 cmake -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release "$@"
+# the configure went through, an hour of compiling starts: the libraries
+# of the build before go NOW, not when this one is collected - a build
+# that stops half way leaves dlls/ empty, never the old set looking like
+# the new (the 'dlls' target empties it again before it copies).
+# -DWHISPER_DEV_CLEAN_DLLS=OFF keeps them, here as there.
+case " $* " in
+  *WHISPER_DEV_CLEAN_DLLS=OFF*) ;;
+  *) cmake "-DDEST=$(pwd)/dlls" -P cmake/clean_dlls.cmake ;;
+esac
 # "-j" alone means unlimited jobs with make and can exhaust memory: one per CPU
 cmake --build "$BUILD_DIR" --config Release -j "${JOBS:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)}"
 echo

@@ -55,6 +55,12 @@ rem (RTX 20, GTX 16), which the driver compiles at first use - and refuses
 rem when it is older than the toolkit. A -DCUDA_ALL=OFF given here comes
 rem later and wins.
 cmake -B build -G "Ninja Multi-Config" -DCUDA_ALL=ON %* || exit /b 1
+rem The configure went through, the compiling starts: the libraries of the
+rem build before go NOW, not when this one is collected - a build that stops
+rem half way leaves dlls\ empty, never the old set looking like the new.
+rem -DWHISPER_DEV_CLEAN_DLLS=OFF keeps them, here as in the dlls target.
+echo %* | findstr /i /c:"WHISPER_DEV_CLEAN_DLLS=OFF" >nul
+if errorlevel 1 cmake "-DDEST=%~dp0dlls" -P cmake\clean_dlls.cmake
 if defined JOBS (
   cmake --build build --config Release -j %JOBS% || exit /b 1
 ) else (

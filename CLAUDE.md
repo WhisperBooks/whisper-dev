@@ -23,7 +23,7 @@ history of whisper-dev zips 01 - 20 is there (its session 7).
 - whisper.cpp is a submodule pinned to a commit: never `--remote`.
 - dlls/ is build output: only its .gitignore and README.md are tracked.
 
-Last number used: 28.
+Last number used: 29.
 
 ## What can be tested without the SDKs
 
@@ -35,6 +35,22 @@ Last number used: 28.
 - `sh -n` on the scripts. Not testable without Docker and the SDKs: the
   image, CUDA / HIP compiles, real bundling - the owner's container build
   is their test.
+
+## Zip 29 (on top of zip 28): dlls/ is emptied when the compiling starts
+Owner, 2026-11-24 20:48, the Linux build of 1.9.6 running: "we're about
+to make new dlls while old ones are still there. Should remove old
+before building new IMHO" - right: the dlls target emptied the folder
+only just before it copied, so for the whole compile, and after a build
+that stopped, dlls/ held the build before (1.9.5's .so.0 set, looking
+like a result). Files: build.sh, build.bat, README.md, CLAUDE.md.
+- build.sh / build.bat: cmake -DDEST=<dlls> -P cmake/clean_dlls.cmake
+  right after the configure step (a configure that stops - a missing
+  SDK, a mistyped option - still leaves the old set). Not with
+  -DWHISPER_DEV_CLEAN_DLLS=OFF among the arguments. .gitignore and
+  README.md stay, as clean_dlls.cmake always left them.
+- A build straight through cmake (no script) is as before.
+- TESTED here: sh -n; build.sh's lines on a scratch dlls/ (emptied;
+  kept with the option). build.bat NOT RUN (no Windows).
 
 ## Zip 28 (on top of 0570144 = zip 27): *.log ignored; the day's notes
 Files: .gitignore, CLAUDE.md. Owner, 2026-11-24 20:16 - 20:44.
