@@ -1,0 +1,22 @@
+// whisper-dev: <cmath> for the HIP SDK's clang on Windows with Visual
+// Studio 2026's C++ library (MSVC 14.51 and later).
+//
+// That library defines isgreater, isless, isunordered & co. as constexpr
+// functions when the compiler is clang. In a HIP compile a constexpr
+// function is host-and-device, and clang's own device declarations of the
+// same functions (__clang_cuda_math_forward_declares.h, included by the
+// HIP wrapper AFTER <cmath>) then fail in every source file:
+//   error: __device__ function 'isgreater' cannot overload
+//   __host__ __device__ function 'isgreater'
+// Declared the other way round it compiles: clang leaves a constexpr
+// function alone when a device declaration of it is already there (what
+// it does for libstdc++ on Linux). So: clang's declarations first, then
+// the real <cmath>.
+//
+// Only this folder is put in front of the include path, and only for the
+// HIP tree (cmake/hip_msvc_cmath.cmake); C and non-HIP C++ files pass
+// straight through.
+#if defined(__HIP__) && !defined(__HIPRTC__)
+#include <__clang_cuda_math_forward_declares.h>
+#endif
+#include_next <cmath>

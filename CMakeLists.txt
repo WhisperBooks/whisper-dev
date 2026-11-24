@@ -100,6 +100,7 @@ else()
 endif()
 option(WHISPER_DEV_COREML   "macOS: build whisper with the Core ML encoder (falls back to Metal without an .mlmodelc)" ${_coreml_default})
 option(CUDA_ALL             "CUDA architectures 50;75;86;89;120 instead of ggml's default" OFF)
+option(WHISPER_DEV_HIP_CMATH "Windows HIP with MSVC 14.51+: clang's device math declarations before <cmath>" ON)
 option(WHISPER_DEV_BUNDLE_RUNTIMES "Linux: copy the CUDA / ROCm runtime libraries the GPU backends need into dlls/" ON)
 option(WHISPER_DEV_CLEAN_DLLS "Remove the libraries of earlier builds from dlls/ before collecting this build's" ON)
 set(WHISPER_DEV_HIP_TARGETS "gfx1030;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201" CACHE STRING
@@ -447,6 +448,21 @@ if (WHISPER_DEV_HIP AND WIN32)
         message(FATAL_ERROR "clang / clang++ not found in the HIP SDK at ${_hip}")
     endif()
     string(REPLACE ";" "|" _hip_targets "${WHISPER_DEV_HIP_TARGETS}")
+    # Visual Studio 2026's C++ library (MSVC 14.51 = cl 19.51) and the HIP
+    # SDK's clang: every HIP source fails in <cmath> ("__device__ function
+    # 'isgreater' cannot overload __host__ __device__ function") unless
+    # clang's device declarations come first - cmake/hip-msvc/cmath.
+    # WHISPER_DEV_HIP_CMATH=OFF leaves it out (an SDK whose clang does this
+    # itself).
+    # The same file takes -Wignored-attributes off the HIP tree (the
+    # "dllimport is not supported" flood of the GPU passes), always.
+    set(_hip_cmath -DCMAKE_PROJECT_INCLUDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/hip_msvc_cmath.cmake
+        -DWHISPER_DEV_HIP_CMATH_SHIM=OFF)
+    if (WHISPER_DEV_HIP_CMATH AND MSVC AND MSVC_VERSION GREATER_EQUAL 1951)
+        set(_hip_cmath -DCMAKE_PROJECT_INCLUDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/hip_msvc_cmath.cmake
+            -DWHISPER_DEV_HIP_CMATH_SHIM=ON)
+        message(STATUS "whisper-dev: MSVC ${MSVC_VERSION} - the HIP tree gets cmake/hip-msvc/cmath")
+    endif()
     include(ExternalProject)
     # Same checkout, its own tree, only ggml-hip is built; at run time it uses
     # the MSVC-built ggml-base.dll of the main tree (same backend API version).
@@ -460,6 +476,11 @@ if (WHISPER_DEV_HIP AND WIN32)
             -DCMAKE_C_COMPILER=${_hip_clang}
             -DCMAKE_CXX_COMPILER=${_hip_clangxx}
             -DCMAKE_BUILD_TYPE=Release
+            # where find_package(hip / hipblas / rocblas) looks: ggml takes
+            # ROCM_PATH only (not set on Windows), so without this the SDK
+            # was found by its bin folder being on PATH, or not at all
+            -DCMAKE_PREFIX_PATH=${_hip}
+            ${_hip_cmath}
             -DBUILD_SHARED_LIBS=ON -DGGML_BACKEND_DL=ON -DGGML_NATIVE=OFF -DGGML_CPU=OFF
             -DGGML_HIP=ON -DAMDGPU_TARGETS=${_hip_targets} -DGPU_TARGETS=${_hip_targets}
             -DWHISPER_BUILD_EXAMPLES=OFF -DWHISPER_BUILD_TESTS=OFF -DWHISPER_SDL2=OFF

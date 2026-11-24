@@ -49,7 +49,12 @@ if exist build\CMakeCache.txt (
   )
 )
 
-cmake -B build -G "Ninja Multi-Config" %* || exit /b 1
+rem CUDA_ALL: compiled code for the usual GeForce cards (75;86;89;120), as
+rem the Linux container build has it. ggml's own list has only PTX for sm_75
+rem (RTX 20, GTX 16), which the driver compiles at first use - and refuses
+rem when it is older than the toolkit. A -DCUDA_ALL=OFF given here comes
+rem later and wins.
+cmake -B build -G "Ninja Multi-Config" -DCUDA_ALL=ON %* || exit /b 1
 if defined JOBS (
   cmake --build build --config Release -j %JOBS% || exit /b 1
 ) else (
