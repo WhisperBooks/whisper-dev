@@ -69,11 +69,12 @@ Extra arguments to `build.bat` / `build.sh` go to the configure step:
 | `WHISPER_DEV_VULKAN` | Windows ON, Linux if `VULKAN_SDK` is set or `glslc` is found | Vulkan backend |
 | `WHISPER_DEV_HIP` | ON if `HIP_PATH` (Windows) / `ROCM_PATH` is set, or ROCm is in `/opt/rocm` | AMD HIP backend |
 | `WHISPER_DEV_HIP_TARGETS` | `gfx1030;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201` | AMD GPU architectures |
-| `CUDA_ALL` | OFF | CUDA archs `50;75;86;89;120` instead of ggml's default list (`75;86;89;120` with CUDA 13+, which no longer builds for Maxwell / Pascal / Volta) |
+| `CUDA_ALL` | OFF (`build.bat` and the container build pass ON) | CUDA archs `50;75;86;89;120` instead of ggml's default list (`75;86;89;120` with CUDA 13+, which no longer builds for Maxwell / Pascal / Volta) |
+| `WHISPER_DEV_HIP_CMATH` | ON | Windows HIP with Visual Studio 2026's C++ library (MSVC 14.51+): `cmake/hip-msvc/cmath` in front of the HIP tree's include path (without it every HIP source fails with "`__device__` function 'isgreater' cannot overload") |
 | `WHISPER_DEV_BLAS` | OFF | OpenBLAS backend (whisper.cpp always uses one that is present, so it takes the choice away) |
 | `WHISPER_DEV_OPENVINO` | OFF | OpenVINO encoder (links into whisper, which then needs OpenVINO everywhere) |
 | `WHISPER_DEV_BUNDLE_RUNTIMES` | ON | Linux: the CUDA / ROCm runtime libraries into `dlls/` (needs `patchelf`; see below) |
-| `WHISPER_DEV_CLEAN_DLLS` | ON | every build first removes the libraries of earlier builds from `dlls/` |
+| `WHISPER_DEV_CLEAN_DLLS` | ON | every build removes the libraries of earlier builds from `dlls/`: `build.sh` / `build.bat` as soon as the configure step is through (a build that stops leaves the folder empty, not the old set), and again before the new ones are copied |
 
 A required SDK that is missing stops the configure step with a message; pass
 `-DWHISPER_DEV_<X>=OFF` to build without that backend.

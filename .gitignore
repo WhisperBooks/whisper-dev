@@ -7,3 +7,5 @@ audio/*
 models/*
 # AMD's amdgpu-install for the container (downloaded by hand)
 container-build/*.deb
+# a build's output kept with tee / Tee-Object (it holds local paths)
+*.log

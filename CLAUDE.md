@@ -23,7 +23,7 @@ history of whisper-dev zips 01 - 20 is there (its session 7).
 - whisper.cpp is a submodule pinned to a commit: never `--remote`.
 - dlls/ is build output: only its .gitignore and README.md are tracked.
 
-Last number used: 23.
+Last number used: 29.
 
 ## What can be tested without the SDKs
 
@@ -35,6 +35,157 @@ Last number used: 23.
 - `sh -n` on the scripts. Not testable without Docker and the SDKs: the
   image, CUDA / HIP compiles, real bundling - the owner's container build
   is their test.
+
+## Zip 29 (on top of zip 28): dlls/ is emptied when the compiling starts
+Owner, 2026-11-24 20:48, the Linux build of 1.9.6 running: "we're about
+to make new dlls while old ones are still there. Should remove old
+before building new IMHO" - right: the dlls target emptied the folder
+only just before it copied, so for the whole compile, and after a build
+that stopped, dlls/ held the build before (1.9.5's .so.0 set, looking
+like a result). Files: build.sh, build.bat, README.md, CLAUDE.md.
+- build.sh / build.bat: cmake -DDEST=<dlls> -P cmake/clean_dlls.cmake
+  right after the configure step (a configure that stops - a missing
+  SDK, a mistyped option - still leaves the old set). Not with
+  -DWHISPER_DEV_CLEAN_DLLS=OFF among the arguments. .gitignore and
+  README.md stay, as clean_dlls.cmake always left them.
+- A build straight through cmake (no script) is as before.
+- TESTED here: sh -n; build.sh's lines on a scratch dlls/ (emptied;
+  kept with the option). build.bat NOT RUN (no Windows).
+
+## Zip 28 (on top of 0570144 = zip 27): *.log ignored; the day's notes
+Files: .gitignore, CLAUDE.md. Owner, 2026-11-24 20:16 - 20:44.
+- PUSHED AND COMPARED: 0570144 "Windows 1.9.6" ON THE BRANCH 1.9.6 =
+  zips 23 - 27 (every file the same; the submodule at 96ec4d9; the
+  scripts' executable bit). main STAYS AT d7f76d6 - the owner works on
+  the branch 1.9.6 (TWhisper the same: 3f030c9 on 1.9.6 = TWhisper-33,
+  main at 34cbd98); the tag 1.9.5 marks the last 1.9.5 commit in both.
+  A MACHINE THAT BUILDS: git fetch, git checkout 1.9.6, git pull, git
+  submodule update --init --recursive.
+- WHAT WENT WRONG ON THE WAY (so it is known): the owner emptied dlls/
+  by hand, dlls/.gitignore and README.md with it - `git add .` then
+  took every library and ROCm kernel file into a local commit (668 MB
+  pushed at 1 % when stopped; GitHub would have refused the files over
+  100 MB). Undone with git reset --soft d7f76d6, the two files back
+  from the tag (git checkout 1.9.5 -- dlls/.gitignore dlls/README.md).
+  dlls/ NEVER NEEDS EMPTYING BY HAND (clean_dlls.cmake). build.log
+  (tee) was in the next add: *.log is ignored now.
+- CUDA: the container image HAS 13.5 (cuda-toolkit-13-5, the
+  Dockerfile's default; nvcc 13.5.37 seen) - Windows was brought to
+  13.5 on 2026-11-24 BECAUSE of it (owner). Both build CUDA_ALL.
+- Linux: the container build of 1.9.6 started 20:44 (build-container/
+  deleted first) - RESULT NOT KNOWN when this was written. macOS: not
+  started.
+- STILL OPEN: parakeet (whisper.cpp 1.9.6's second library and tools)
+  is built and not used; the crash of the Windows machine during one
+  build (not seen again).
+
+## Zip 27 (on top of zip 26): the Windows HIP tree without the dllimport warnings
+Owner, 2026-11-24 20:12: THE FIRST 1.9.6 WINDOWS BUILD IS THROUGH -
+"[160/160] Linking CXX shared module bin\ggml-hip.dll ... Libraries
+are in C:\src\whisper-dev\dlls" (CUDA toolkit 13.5 with CUDA_ALL,
+Vulkan, HIP SDK 7.2 with Visual Studio 2026 / MSVC 14.51.36231). ZIPS
+24, 25 AND 26 WORK ON WINDOWS (26's cmath: every HIP source compiled).
+One hard system crash during the build before it (black screen,
+restart; the owner: "quite possibly unrelated"; 26 compiles at once -
+JOBS=8 was suggested, the next build ran through without).
+Files: cmake/hip_msvc_cmath.cmake, CMakeLists.txt, CLAUDE.md.
+- The HIP tree's log was unreadable ("a million errors whizzing past"):
+  every GPU pass (six targets) warns for every GGML_API function that
+  "__declspec attribute 'dllimport' is not supported
+  [-Wignored-attributes]". Harmless (the PC pass takes dllimport) -
+  owner: "after this build do that": add_compile_options(
+  -Wno-ignored-attributes) in the HIP tree's project include, which is
+  now given ALWAYS; the cmath folder only with
+  -DWHISPER_DEV_HIP_CMATH_SHIM=ON (MSVC 14.51+ and
+  WHISPER_DEV_HIP_CMATH, as before).
+- NOT RUN (no Windows). The next build there configures the HIP tree
+  again (new arguments) and compiles all of it once more.
+- SEEN in that build: whisper.cpp 1.9.6 also builds parakeet.dll and
+  parakeet-cli / -quantize (a second model's library). Not collected
+  in dlls/, not used; could be left out of the build - NOT ASKED FOR.
+- "Manually-specified variables were not used by the project:
+  AMDGPU_TARGETS" in the HIP tree's configure: harmless (GPU_TARGETS
+  is the one ROCm 7.2 reads; the compile lines carry the six
+  --offload-arch).
+
+## Zip 26 (on top of zip 25): Windows HIP compiles with Visual Studio 2026's library
+Owner, 2026-11-24 19:33, the log of the second build: ZIP 25 WORKED (the
+HIP tree configured), then every one of its HIP sources failed (418
+errors, the first in binbcast.cu):
+  ROCm\7.2\lib\clang\21\include\__clang_cuda_math_forward_declares.h:92:
+  error: __device__ function 'isgreater' cannot overload __host__
+  __device__ function 'isgreater'
+  ...\MSVC\14.51.36231\include\cmath:688: note: previous declaration
+(isgreater, isgreaterequal, isless, islessequal, islessgreater,
+isunordered). Nothing else failed (CUDA 13.5's objects compiled).
+NOT whisper.cpp 1.9.6 and not these scripts: Visual Studio 2026's
+MSVC 14.51 library defines those functions constexpr for clang
+(microsoft/STL#5717), the HIP SDK 7.2's clang 21 includes <cmath>
+before its own device declarations. Known (searched): llama.cpp
+#22570, llvm-project #201563 (clang to include the declarations
+first), several projects with the same log.
+Files: cmake/hip-msvc/cmath (new), cmake/hip_msvc_cmath.cmake (new),
+CMakeLists.txt, README.md, CLAUDE.md.
+- cmake/hip-msvc/cmath: in a HIP compile, clang's
+  __clang_cuda_math_forward_declares.h, then #include_next <cmath> -
+  the order llvm-project #201563 gives clang itself, and what another
+  project's fix does (found by the search; its text says tested).
+- The HIP tree gets it through -DCMAKE_PROJECT_INCLUDE=
+  cmake/hip_msvc_cmath.cmake (include_directories(BEFORE ...)), ONLY
+  when the main tree's compiler is cl 19.51+ (MSVC_VERSION >= 1951)
+  and WHISPER_DEV_HIP_CMATH is ON (new option, ON).
+- TESTED here, the mechanism only (clang 18, -x cuda, two system
+  headers): constexpr isgreater then a device declaration of it - THE
+  LOG'S ERROR, word for word; the device declaration first - compiles.
+  The shim passes a plain C++ compile through.
+- NOT RUN: no Windows, no HIP SDK here - the real build is the
+  owner's. The Linux configure is unchanged. TO SEE on Windows: the
+  configure line "the HIP tree gets cmake/hip-msvc/cmath"; the HIP
+  tree's [n/160] steps pass binbcast.cu.
+- IF IT DOES NOT COMPILE WITH IT: (1) MSVC 14.44 beside 14.51 (Visual
+  Studio Installer, "MSVC v143 - VS 2022 C++ x64/x86 build tools
+  (v14.44)") and the build from a prompt set up with
+  vcvarsall.bat x64 -vcvars_ver=14.44 - reported to work by others;
+  CUDA 13.5 is then compiled by that cl too. (2) build.bat
+  -DWHISPER_DEV_HIP=OFF for everything but HIP.
+
+## Zip 25 (on top of zip 24): the Windows HIP tree is told where the SDK is
+Owner, 2026-11-24 19:18, the first 1.9.6 build on Windows (build/
+deleted first, a new prompt after installing CUDA 13.5; CUDA's objects
+compiled): the HIP tree's configure stopped at
+ggml/src/ggml-hip/CMakeLists.txt:46 find_package(hip) - "Could not
+find a package configuration file provided by hip". Files:
+CMakeLists.txt, CLAUDE.md.
+- ggml-hip's CMakeLists is THE SAME in 1.9.5 and 1.9.6: it adds
+  ROCM_PATH (the environment's; /usr without) to CMAKE_PREFIX_PATH and
+  nothing of HIP_PATH. So on Windows the package was found only
+  through PATH (the SDK's bin there) or a hip_DIR remembered in
+  build/hip's cache - GUESSED which; the deleted build/ and the new
+  prompt are what changed.
+- ExternalProject_Add(ggml-hip-windows): -DCMAKE_PREFIX_PATH=<HIP_PATH>
+  (ggml appends to it). NOT RUN here.
+- IF IT STILL FAILS: is <HIP_PATH>/lib/cmake/hip/hip-config.cmake
+  there (an SDK update with another layout)? Then hip_DIR by hand.
+
+## Zip 24 (on top of zip 23 = d7f76d6): build.bat passes CUDA_ALL=ON
+Owner, 2026-11-24 19:00, building 1.9.6 on Windows with the CUDA
+toolkit 13.5 (new that day): "is windows building cuda 7.5 or
+7.5-virtual?" - it was 75-virtual (ggml's list with CUDA 13: 75-virtual
+80-virtual 86-real 89-real 90-virtual 120a-real 121a-real; the same in
+1.9.5) - "On linux we had to build 7.5 - not virtual - I'd prefer we
+did the same here". Files: build.bat, README.md, CLAUDE.md.
+- build.bat: -DCUDA_ALL=ON before the caller's arguments (so
+  `build.bat -DCUDA_ALL=OFF` wins) - with CUDA 13+: 75;86;89;120, each
+  as compiled code AND PTX (no suffix), as container-build/build.sh
+  does since zip 17. 80, 90 and 121a are no longer named: those cards
+  take the nearest lower one's.
+- build.sh (a host build on Linux / macOS) is unchanged: OFF.
+- NOT RUN here (no Windows, no CUDA). TO SEE: the configure prints
+  ggml's "Replacing 120 in CMAKE_CUDA_ARCHITECTURES with 120a";
+  ggml-cuda.dll is larger than before.
+- A build folder made before this zip has no CUDA_ALL in its cache:
+  the option on the command line sets it, no need to delete (the
+  owner deleted build/ for 1.9.6 anyway).
 
 ## Zip 23 (on top of zip 22): whisper.cpp 1.9.6
 Owner, 2026-11-24 (Epubunum session 15): "whisper 1.9.6 just came out",
