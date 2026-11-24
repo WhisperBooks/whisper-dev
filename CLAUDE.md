@@ -23,7 +23,7 @@ history of whisper-dev zips 01 - 20 is there (its session 7).
 - whisper.cpp is a submodule pinned to a commit: never `--remote`.
 - dlls/ is build output: only its .gitignore and README.md are tracked.
 
-Last number used: 22.
+Last number used: 23.
 
 ## What can be tested without the SDKs
 
@@ -35,6 +35,42 @@ Last number used: 22.
 - `sh -n` on the scripts. Not testable without Docker and the SDKs: the
   image, CUDA / HIP compiles, real bundling - the owner's container build
   is their test.
+
+## Zip 23 (on top of zip 22): whisper.cpp 1.9.6
+Owner, 2026-11-24 (Epubunum session 15): "whisper 1.9.6 just came out",
+then "OK, whisper-dev time". Files: CMakeLists.txt (a comment),
+README.md, CLAUDE.md. THE SUBMODULE IS MOVED BY THE OWNER (never from
+a zip): v1.9.6 = 96ec4d9823e9d0211944172da35f9f29134af990, from 5922450
+(1.9.5-dev):
+  git -C whisper.cpp fetch --tags origin
+  git -C whisper.cpp checkout v1.9.6
+  git add whisper.cpp
+READ, 5922450 .. v1.9.6 (303 files):
+- include/whisper.h: NO CHANGE. ggml-backend.h: NO CHANGE (what
+  TWhisper binds beside whisper.h). ggml.h: only deprecated calls and
+  three ops taken out (ggml_add1, ggml_diag_mask_*, ggml_rope_custom,
+  ggml_upscale_ext ...) - nothing TWhisper or this build names.
+- CMake: no option this file sets was renamed. ggml-cuda now links
+  CUDA::cublasLt itself - already bundled here (Windows' copy list,
+  Linux through bundle_linux.cmake).
+- GGML IS 1.0.0 (was 0.29): THE SONAME CHANGES - libggml.so.1,
+  libggml-base.so.1 (macOS: libggml.1.dylib, libggml-base.1.dylib),
+  were .so.0 / .0.dylib. libwhisper stays .so.1. Nothing here names
+  the number (the copies take the target's own soname; clean_dlls
+  removes the .0 files of an earlier build from dlls/), BUT WHO TAKES
+  dlls/ DOES: Epubunum (tools/steam_stage.py asks for libggml.so.0;
+  the .dproj / .deployproj deployment lists name libggml.so.0,
+  libggml-base.so.0, libggml.0.dylib, libggml-base.0.dylib; old .0
+  files left in redistributable_bin) and TWhisper (its second name
+  for ggml is '.so.0' - the first, libggml.so, is still there).
+TESTED here (Linux x64, gcc 13, v1.9.6 in place of the submodule): the
+configure with the GPU backends off ("ggml version: 1.0.0"), the dlls
+target - 272 steps, libwhisper.so.1.9.6, libggml.so.1.0.0,
+libggml-base.so.1.0.0, the fourteen CPU variants, libgomp.so.1;
+BUILD-INFO.txt names the commit. NOT BUILT here: CUDA, Vulkan, HIP,
+Windows, macOS / Core ML - the owner's builds are their test (CUDA:
+the cublasLt link line is new; a toolkit without cublasLt would stop
+at configure).
 
 ## Zip 22 (on top of zip 21): Core ML on macOS
 Owner, 2026-11-18 (Epubunum session 9; M4 Mac mini, base.en Night Watch

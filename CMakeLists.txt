@@ -272,8 +272,8 @@ list(APPEND _copy_cmds COMMAND ${CMAKE_COMMAND} -E make_directory ${_dest})
 set(_copy_deps)
 
 # shared libraries: the file, plus on Linux / macOS the soname and the plain
-# name (libggml.so.0 is what the others NEED; libggml.so is what TWhisper
-# looks for first)
+# name (libggml.so.1 is what the others NEED - .so.0 before ggml 1.0, that
+# is up to whisper.cpp 1.9.5; libggml.so is what TWhisper looks for first)
 # (whisper.coreml: macOS with WHISPER_DEV_COREML - libwhisper needs it)
 foreach (_t whisper ggml ggml-base whisper.coreml)
     if (TARGET ${_t})

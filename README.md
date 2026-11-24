@@ -103,7 +103,8 @@ On Windows:
 | `msvcp140.dll`, `vcruntime140*.dll`, `vcomp140.dll` | MSVC + OpenMP runtime, app-local |
 
 On Linux / macOS the same set as `lib*.so` / `lib*.dylib` (with their
-soname copies, e.g. `libggml.so.0`) - the backends are `lib*.so` on macOS
+soname copies, e.g. `libggml.so.1` - ggml 1.0, with whisper.cpp 1.9.6;
+`libggml.so.0` up to 1.9.5) - the backends are `lib*.so` on macOS
 too (`libggml-cpu-apple_m4.so`, `libggml-metal.so`: ggml loads its
 backend modules by that name everywhere but Windows); on macOS also
 `libwhisper.coreml.dylib` (Core ML, below), plus on Linux with gcc OpenMP's
