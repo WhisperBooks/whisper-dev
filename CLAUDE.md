@@ -23,7 +23,7 @@ history of whisper-dev zips 01 - 20 is there (its session 7).
 - whisper.cpp is a submodule pinned to a commit: never `--remote`.
 - dlls/ is build output: only its .gitignore and README.md are tracked.
 
-Last number used: 27.
+Last number used: 28.
 
 ## What can be tested without the SDKs
 
@@ -35,6 +35,33 @@ Last number used: 27.
 - `sh -n` on the scripts. Not testable without Docker and the SDKs: the
   image, CUDA / HIP compiles, real bundling - the owner's container build
   is their test.
+
+## Zip 28 (on top of 0570144 = zip 27): *.log ignored; the day's notes
+Files: .gitignore, CLAUDE.md. Owner, 2026-11-24 20:16 - 20:44.
+- PUSHED AND COMPARED: 0570144 "Windows 1.9.6" ON THE BRANCH 1.9.6 =
+  zips 23 - 27 (every file the same; the submodule at 96ec4d9; the
+  scripts' executable bit). main STAYS AT d7f76d6 - the owner works on
+  the branch 1.9.6 (TWhisper the same: 3f030c9 on 1.9.6 = TWhisper-33,
+  main at 34cbd98); the tag 1.9.5 marks the last 1.9.5 commit in both.
+  A MACHINE THAT BUILDS: git fetch, git checkout 1.9.6, git pull, git
+  submodule update --init --recursive.
+- WHAT WENT WRONG ON THE WAY (so it is known): the owner emptied dlls/
+  by hand, dlls/.gitignore and README.md with it - `git add .` then
+  took every library and ROCm kernel file into a local commit (668 MB
+  pushed at 1 % when stopped; GitHub would have refused the files over
+  100 MB). Undone with git reset --soft d7f76d6, the two files back
+  from the tag (git checkout 1.9.5 -- dlls/.gitignore dlls/README.md).
+  dlls/ NEVER NEEDS EMPTYING BY HAND (clean_dlls.cmake). build.log
+  (tee) was in the next add: *.log is ignored now.
+- CUDA: the container image HAS 13.5 (cuda-toolkit-13-5, the
+  Dockerfile's default; nvcc 13.5.37 seen) - Windows was brought to
+  13.5 on 2026-11-24 BECAUSE of it (owner). Both build CUDA_ALL.
+- Linux: the container build of 1.9.6 started 20:44 (build-container/
+  deleted first) - RESULT NOT KNOWN when this was written. macOS: not
+  started.
+- STILL OPEN: parakeet (whisper.cpp 1.9.6's second library and tools)
+  is built and not used; the crash of the Windows machine during one
+  build (not seen again).
 
 ## Zip 27 (on top of zip 26): the Windows HIP tree without the dllimport warnings
 Owner, 2026-11-24 20:12: THE FIRST 1.9.6 WINDOWS BUILD IS THROUGH -
